@@ -117,63 +117,60 @@ class QRY_conf():
 class Shazam_conf():
     def __init__(self):
         ############ Shazam Constellation Point Details ############
-        if 1:
-            ## get_raw_constellation_pts()
-            self.running_percentile_val=50
-            """ running_percentile_val : range from [0,100]
-                Defaults to 70.
-                Gets a sliding percentile instead of the whole spectrogram.
-                Used to calculate threshold, which determines minimum amplitude required to be a peak.
-            """
+        ## get_raw_constellation_pts()
+        self.running_percentile_val=50
+        """ running_percentile_val : range from [0,100]
+            Defaults to 70.
+            Gets a sliding percentile instead of the whole spectrogram.
+            Used to calculate threshold, which determines minimum amplitude required to be a peak.
+        """
 
-            self.f_dim1, self.t_dim1=10,10
-            """ The window of the spectrogram for finding candidate peak
+        self.f_dim1, self.t_dim1=10,10
+        """ The window of the spectrogram for finding candidate peak
 
-                At a particular index i,j:
-                    we find the location of the max value of S[i:i+t_dim1,j:j+f_dim1]
-                    (i,j+f_dim1)---------------------------(i+t_dim1,j+f_dim1)
-                        |                                       |
-                        |        S[i:i+t_dim1,j:j+f_dim1]       |
-                        |                                       |
-                      (i,j)-----------------------------------(i+t_dim1,j)
+            At a particular index i,j:
+                we find the location of the max value of S[i:i+t_dim1,j:j+f_dim1]
+                (i,j+f_dim1)---------------------------(i+t_dim1,j+f_dim1)
+                    |                                       |
+                    |        S[i:i+t_dim1,j:j+f_dim1]       |
+                    |                                       |
+                  (i,j)-----------------------------------(i+t_dim1,j)
 
-                argmax of this given window is a candidate constellation point
-            """
+            argmax of this given window is a candidate constellation point
+        """
 
-            self.f_dim2, self.t_dim2=5,5
-            """ Threshold for local max.
-                Typically smaller than f_dim1,t_dim1
+        self.f_dim2, self.t_dim2=5,5
+        """ Threshold for local max.
+            Typically smaller than f_dim1,t_dim1
 
-                At a particular index i,j:
-                    we eliminate these candidates if they are not the argmax of their neighbours
-                    (i-t_dim2,j+f_dim2)---------------------------(i+t_dim2,j+f_dim2)
-                        |                                                   |
-                        |                          (i,j)                    |
-                        |                                                   |
-                    (i-t_dim2,j-f_dim2)---------------------------(i+t_dim2,j-f_dim2)
-            """
+            At a particular index i,j:
+                we eliminate these candidates if they are not the argmax of their neighbours
+                (i-t_dim2,j+f_dim2)---------------------------(i+t_dim2,j+f_dim2)
+                    |                                                   |
+                    |                          (i,j)                    |
+                    |                                                   |
+                (i-t_dim2,j-f_dim2)---------------------------(i+t_dim2,j-f_dim2)
+        """
 
-            self.base=10
-            # base : freq bin lower than this index is not considered as peak
+        self.base=10
+        # base : freq bin lower than this index is not considered as peak
 
-            ## filter_peaks()
-            self.high_peak_percentile=65
-            self.low_peak_percentile=65
-        ############ Shazam Hash Generation Details ############
-        if 1:
-            self.num_tgt_pts=3
-            # Get the top num_tgt_pts points in the target zone as hash
+        ## filter_peaks()
+        self.high_peak_percentile=65
+        self.low_peak_percentile=65
+    ############ Shazam Hash Generation Details ############
+        self.num_tgt_pts=3
+        # Get the top num_tgt_pts points in the target zone as hash
 
-            self.delay_time_secs=1   # Time delayed before seeking the next
-            self.delta_time_secs=5   # Time width of Target Zone 
-            self.delta_freq_Hz=1500  # Freq width of Target Zone, will be +- half of this from the anchor point
-        ############ Shazam Hash Clustering Details ############
-        if 1:
-            # If threshold_cluster is more than this amount, we classify them as within the same cluster
-            self.threshold_short=10 # For comparing short sequences ~10s
-            self.threshold_long=300 # For comparing long sequences ~3min
-            self.th=self.threshold_short
-            self.cluster_verbose=False
+        self.delay_time_secs=1   # Time delayed before seeking the next
+        self.delta_time_secs=5   # Time width of Target Zone
+        self.delta_freq_Hz=1500  # Freq width of Target Zone, will be +- half of this from the anchor point
+    ############ Shazam Hash Clustering Details ############
+        # If threshold_cluster is more than this amount, we classify them as within the same cluster
+        self.threshold_short=10 # For comparing short sequences ~10s
+        self.threshold_long=300 # For comparing long sequences ~3min
+        self.th=self.threshold_short
+        self.cluster_verbose=False
 
     def __str__(self):
         print('\n############ Shazam ############')
@@ -200,24 +197,23 @@ class Shazam_conf():
 class SR_conf():
     def __init__(self):
         ############ Audio Wave Parameters ############
-        if 1:
-            self.sr=8000
+        self.sr=8000
 
-            self.n_fft_time=0.0464
-            self.winlen=0.0464
-            self.winstep=0.0232
+        self.n_fft_time=0.0464
+        self.winlen=0.0464
+        self.winstep=0.0232
 
-            self.n_fft=int(self.sr*self.n_fft_time)+1      # int()+1 because want to round up 
-            self.win_length=int(self.sr*self.winlen)+1     # int()+1 because want to round up 
-            self.hop_length=int(self.sr*self.winstep)+1    # int()+1 because want to round up 
-            
-            self.num_freq_bins=self.n_fft//2 +1
-        ############ Audio Feat Parameters ############
-        if 1:
-            self.n_mels=26
-            self.n_mfcc=20
-            self.nfft=self.n_fft+0
-            self.nfilt=self.n_mels+0
+        # int()+1 because want to round up
+        self.n_fft=int(self.sr*self.n_fft_time)+1
+        self.win_length=int(self.sr*self.winlen)+1
+        self.hop_length=int(self.sr*self.winstep)+1
+
+        self.num_freq_bins=self.n_fft//2 +1
+    ############ Audio Feat Parameters ############
+        self.n_mels=26
+        self.n_mfcc=20
+        self.nfft=self.n_fft+0
+        self.nfilt=self.n_mels+0
 
     def __str__(self):
         print('\n############ SR_conf ############')

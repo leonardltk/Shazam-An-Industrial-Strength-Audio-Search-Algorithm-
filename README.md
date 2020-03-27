@@ -1,4 +1,9 @@
 # Shazam : An Industrial Strength Audio Search Algorithm
+```
+Adapted from, hence credits to
+https://github.com/bmoquist/Shazam
+https://github.com/miishke/PyDataNYC2015
+```
 
 ## Init
 ```bash
