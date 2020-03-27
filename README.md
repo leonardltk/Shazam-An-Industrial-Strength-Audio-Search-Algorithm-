@@ -1,56 +1,50 @@
-# Shazam-An-Industrial-Strength-Audio-Search-Algorithm-
-### Requirements
-```
-python 3.6
-    audiofile              0.2.2
-    audioread              2.1.8
-    librosa                0.7.0
-    matplotlib             3.0.3
-    numpy                  1.17.2
-    python-speech-features 0.6
-    scikit-image           0.15.0
-    scikit-learn           0.21.3
-    scipy                  1.3.1
-    SoundFile              0.10.3.post1
-    sox                    1.3.7
-```
+# v3_FilteringBannedFullSongs
 
-### Hashing (Database)
+## Init
 ```bash
-conf_qry=./conf/DB_v1/conf2_db.py
-conf_sr=./conf/Shazam/conf1_sr8k_Shazam.py
-conf_hash=./conf/Shazam/conf3_Shazam.py
-
-python -u ./utils/Hashing.py \
-            -conf_qry $conf_qry \
-            -conf_sr $conf_sr \
-            -conf_hash $conf_hash
+cd /data3/lootiangkuan/AudioHashing/Combined/v3_FilteringBannedFullSongs
+. path.sh
 ```
 
-### Hashing (Queries)
+## Data (Splitting the queries to $nj jobs for parallel processing)
 ```bash
-conf_qry=./conf/Qry_v1/conf2_qry.py
-conf_sr=./conf/Shazam/conf1_sr8k_Shazam.py
-conf_hash=./conf/Shazam/conf3_Shazam.py
-
-python -u ./utils/Hashing.py \
-            -conf_qry $conf_qry \
-            -conf_sr $conf_sr \
-            -conf_hash $conf_hash
+mkdir -pv $splitdir
+split --verbose -a $num_a -d --numeric-suffixes=1 -n l/$nj $qry_wavscp $splitdir/wav.scp.
+    wc -l $qry_wavscp
+    wc -l $splitdir/wav.scp.*
 ```
 
-
-### Matching
+## Hashing (Database)
 ```bash
-conf_db=./conf/DB_v1/conf2_db.py
-conf_qry=./conf/Qry_v1/conf2_qry.py
-conf_sr=./conf/Shazam/conf1_sr8k_Shazam.py
-conf_hash=./conf/Shazam/conf3_Shazam.py
+## Hashing the database, and storing them to a dictionary
+python -u ./utils/Hashing.py -DB_type $DB_type |& tee $logdir/Hashing.log
+```
 
-python -u ./utils/Matching.py \
-            -conf_db $conf_db \
-            -conf_qry $conf_qry \
-            -conf_sr $conf_sr \
-            -conf_hash $conf_hash
+## Matching (Queries)
+```bash
+# cont=True # Set to True if you are continuing from a prematurely stopped script
+for jid in `seq -w $nj`; do
+    python -u ./utils/Matching.py \
+        -DB_type $DB_type \
+        -Qry_type $Qry_type \
+        -jid $jid \
+        -cont $cont \
+        &>> $logdir/Matching.$jid.log &
+done
+wait
 
+grep " matched " $logdir/Matching.*
+```
+
+## Combine
+```bash
+python -u ./utils/Combine.py \
+    -DB_type $DB_type \
+    -Qry_type $Qry_type \
+    -nj $nj \
+    -zfill $num_a \
+    |& tee $logdir/Combine.log
+
+perl utils/utt2spk_to_spk2utt.pl $qry2db | sort > $db2qry
+    wc -l $qry2db $db2qry
 ```

@@ -302,17 +302,18 @@ def findTargetZonePts(AllPeaks, anchor_peak, delay_time,delta_time,delta_freq):
             adjPts.append(curr_peak)
             
     return adjPts
+
 ################################################################
 ## Matching
 ################################################################
-def make_decision(rep_hash_in, query_hash_in, bins=100, N=1, verbose=0):
+def count_number_match(rep_hash_in, query_hash_in, bins=100, N=1, verbose=0):
     """ Calculates the number of matches in the 
         representative hash (rep_hash_in) of the current cluster against
         the current hash (query_hash_in).
 
         Usage:
         ------
-            num_matches = get_num_matches(rep_hash, query_hash, bins=100, N=1)
+            num_matches = count_number_match(rep_hash_in, query_hash_in, bins=100, N=1)
 
         Input:
         ------
@@ -338,12 +339,51 @@ def make_decision(rep_hash_in, query_hash_in, bins=100, N=1, verbose=0):
                 Number of hash matches.
     """
     db_timepairs = findTimePairs(rep_hash_in, query_hash_in)
-    elem_match = get_candidate_bins(db_timepairs, 
-                curr_max=max( 
-                                query_hash_in[1],
-                                rep_hash_in[1]), 
-                bins=bins, N=N)
-    return elem_match
+    ## Get statistics
+    curr_max=max(   query_hash_in[1], rep_hash_in[1]),
+    curr_min = min(db_timepairs)
+
+    curr_offsets = np.array(db_timepairs)-curr_min
+    try :
+        hist, bin_edges = np.histogram(curr_offsets, bins=100, range=(0,curr_max-curr_min))
+    except IndexError:
+        hist, bin_edges = np.histogram(curr_offsets, bins=100)
+    return np.max(hist)
+def make_decision(rep_hash_in, query_hash_in, bins=100, N=1, threshold=10, verbose=0):
+    """ Fast decide if representative hash (rep_hash_in) match with current hash (query_hash_in).
+    If the number of match cross the threshold, immediately return True to save time.
+
+        Usage:
+        ------
+            bool = make_decision(rep_hash_in, query_hash_in, bins=100, N=1, threshold=conf_hash.threshold_cluster, verbose=0)
+
+        Input:
+        ------
+            rep_hash
+                hash representing the current cluster.
+
+            query_hash
+                hash to compare with current cluster.
+
+            bins
+                Split current time matches into histogram, with specified number of bins.
+                !!! Might need to change to be adaptively to increase recall.
+
+            N
+                Only give results for top N bins.
+                !!! Maybe return top 3 instead?
+                !!! See how it can improve accuracy.
+
+        Returns:
+        --------
+            num_matches
+                Number of hash matches.
+    """
+    db_timepairs = findTimePairs(rep_hash_in, query_hash_in)
+    return get_candidate_bins(db_timepairs, 
+                    curr_max=max(   query_hash_in[1],
+                                    rep_hash_in[1]), 
+                    bins=bins, N=N, threshold=threshold)
 def findTimePairs(hash_database_in,query_hash,   deltaTime=4,deltaFreq=2):
     """     Find the matching pairs between sample audio file and the songs in the database"
         Inputs :
@@ -374,7 +414,18 @@ def findTimePairs(hash_database_in,query_hash,   deltaTime=4,deltaFreq=2):
     for element in db_hash.keys() & qry_hash.keys():
         timePairs.extend([db_t-qry_t for qry_t in qry_hash[element] for db_t in db_hash[element] ])
     return timePairs
-def get_candidate_bins(db_timepairs, curr_max, bins=100, N=1, threshold=10):
+def get_candidate_bins_v2(db_timepairs, curr_max, bins=100, N=1, threshold=10):
+    ## Get statistics
+    curr_min = min(db_timepairs)
+    ## Normalising it to [0,50]
+    curr_offsets = np.array(db_timepairs)-curr_min
+    ## 
+    hist, bin_edges = np.histogram(curr_offsets, bins=bins, range=(0,curr_max-curr_min))
+    return True if np.max(hist)>threshold else False
+get_candidate_bins=get_candidate_bins_v2
+
+# "To work on this"
+def get_candidate_bins_v1(db_timepairs, curr_max, bins=100, N=1, threshold=10):
     if len(db_timepairs) < threshold: return None
     ## Get statistics
     curr_min = min(db_timepairs)
@@ -408,7 +459,39 @@ def get_candidate_bins(db_timepairs, curr_max, bins=100, N=1, threshold=10):
 ################################################################
 ## Hash table Lookup
 ################################################################
-
+def addLUT(LUT, db_hash_in, name_in):
+    if db_hash_in[0] is None: 
+        print(f"\t{name_in} has no hash")
+        return LUT
+    for key in db_hash_in[0]:
+        if not key in LUT: LUT[key]=set()
+        LUT[key].add(name_in)
+    return LUT
+def searchLUT_v1(LUT, qry_hash_in, name_in):
+    """
+    Return a set of db with matching hash.
+    """
+    cand_list = set()
+    if qry_hash_in[0] is None: 
+        print(f"\t{name_in} has no hash")
+        return cand_list
+    for key in qry_hash_in[0]:
+        if not key in LUT: continue
+        cand_list.update(LUT[key])
+    return cand_list
+def searchLUT_v2(LUT, qry_hash_in, name_in):
+    """
+    Return a Counter of db with matching hash, in descending order
+    """
+    cand_DICT = collections.Counter()
+    if qry_hash_in[0] is None: 
+        print(f"\t{name_in} has no hash")
+        return cand_DICT
+    for key in qry_hash_in[0]:
+        if not key in LUT: continue
+        cand_DICT.update(LUT[key])
+    return cand_DICT.most_common()
+searchLUT=searchLUT_v2
 ################################################################
 ##        Misc         ##
 ################################################################
