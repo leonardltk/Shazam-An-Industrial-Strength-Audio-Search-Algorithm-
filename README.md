@@ -1,8 +1,8 @@
-# v3_FilteringBannedFullSongs
+# Shazam : An Industrial Strength Audio Search Algorithm
 
 ## Init
 ```bash
-cd /data3/lootiangkuan/AudioHashing/Combined/v3_FilteringBannedFullSongs
+cd ./Shazam-An-Industrial-Strength-Audio-Search-Algorithm-
 . path.sh
 ```
 
