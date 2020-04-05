@@ -98,6 +98,10 @@ def read_audio(filename_in, mode="audiofile", sr=None, mean_norm=False):
     elif mode=="audiofile":
         sound, sound_fs = af.read(filename_in)
 
+    ## Convert to mono
+    if len(sound.shape)>1:
+        sound = np.mean(sound, axis=0)
+
     ## Resampling
     if sr and sr!=sound_fs: 
         sound = resampy.resample(sound, sound_fs, sr, axis=0)

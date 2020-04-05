@@ -18,6 +18,7 @@ if True: ## imports / admin
         parser.add_argument('-Qry_type')
         parser.add_argument('-jid')
         parser.add_argument('-cont', default=False)
+        parser.add_argument('-milestone_idx', type=int, default=100)
         # 
         args=parser.parse_args()
         DB_type=args.DB_type
@@ -26,6 +27,7 @@ if True: ## imports / admin
         cont=args.cont
         if cont=='True' : cont=True
         elif cont=='False' : cont=False
+        milestone_idx=args.milestone_idx
         # 
         conf_db=conf.DB_conf(DB_type)
         conf_qry=conf.QRY_conf(Qry_type, jid)
@@ -42,7 +44,7 @@ if True: ## imports / admin
     print('############ End of Config Params ##############')
 #################################################################
 def milestone():
-    if idx%100 == 1 :
+    if idx%milestone_idx == 1 :
         checkpoint_saving()
         print(f"\tTime taken so far : {datetime.datetime.now()-START_TIME}")
 def checkpoint_saving():
@@ -57,17 +59,9 @@ def checkpoint_saving():
 #################################################################
 print('========== Read db =================')
 if True : ## Read db
-    ## Read hash.scp
-    ## Load hashes & LUT
-    if cont:
-        utt2hashpath_DICT_DB = dump_load_pickle(conf_db.exp_utt2hashpath_DICT,"load")
-        utt2shash_DICT_DB = dump_load_pickle(conf_db.exp_utt2shash_DICT,"load")
-    else:
-        utt2hashpath_DICT_DB = dict( (i.replace('\n','').split(' ')) for i in open(conf_db.shash_scp,'r') )
-        dump_load_pickle(conf_db.exp_utt2hashpath_DICT,"dump", utt2hashpath_DICT_DB)
-        utt2shash_DICT_DB = dict( (utt,dump_load_pickle(hash_path, "load")) for utt,hash_path in utt2hashpath_DICT_DB.items() )
-        dump_load_pickle(conf_db.exp_utt2shash_DICT,"dump", utt2shash_DICT_DB)
+    utt2hashpath_DICT_DB = dump_load_pickle(conf_db.exp_utt2hashpath_DICT,"load")
     print(f'\tThere are {len(utt2hashpath_DICT_DB)} files in {conf_db.shash_scp}')
+    utt2shash_DICT_DB    = dump_load_pickle(conf_db.exp_utt2shash_DICT,"load")
     print(f'\tThere are {len(utt2shash_DICT_DB)} hashes')
     LUT = dump_load_pickle(conf_db.exp_LUT, "load")
     print(f'\tThere are {len(LUT)} keys in LUT')
@@ -82,7 +76,7 @@ if True : ## Read qry
         Matched_Dict = dump_load_pickle(conf_qry.split_Matched_Dict, "load")
         Matched_Shash_Dict = dump_load_pickle(conf_qry.split_Matched_Shash_Dict, "load")
     else:
-        utt2wavpath_DICT_qry = dict( (i.replace('\n','').split(' ')) for i in open(conf_qry.split_wav_scp,'r') )
+        utt2wavpath_DICT_qry = dict( (i.replace('\n','').split('\t')) for i in open(conf_qry.split_wav_scp,'r') )
         dump_load_pickle(conf_qry.split_wavscp_dict, "dump", utt2wavpath_DICT_qry)
         #
         print("\tWriting to ",conf_qry.split_qry2db)
@@ -113,12 +107,12 @@ for idx,utt__wav_path in enumerate(utt2wavpath_DICT_qry.items(), 1):
         # dump_load_pickle(hash_path, "dump", qry_shash)
         if qry_shash[0] is None : 
             print(f"\t{utt} has no hash")
-            Unmatched_Dict[utt] = {'remarks':f'{utt} : {wav_path} has no shash extractable, possibly due to silence'}
+            Unmatched_Dict[utt] = {'remarks':f'{utt}\thas no shash extractable, possibly due to silence  : {wav_path} '}
             milestone()
             continue
     except subprocess.CalledProcessError: 
         print(f"\t{utt} has corrupted mp3")
-        Unmatched_Dict[utt] = {'remarks':f'{utt} : {wav_path} has corrupted mp3'}
+        Unmatched_Dict[utt] = {'remarks':f'{utt}\thas corrupted mp3 : {wav_path}'}
         milestone()
         continue
 
@@ -126,22 +120,34 @@ for idx,utt__wav_path in enumerate(utt2wavpath_DICT_qry.items(), 1):
     CandidateSet = Shazam.searchLUT(LUT, qry_shash, utt)
     max_so_far=-1
     for utt_DB, num_union in CandidateSet:
+        ## Perform matching
         shash_DB = utt2shash_DICT_DB[utt_DB]
         num_matches=Shazam.count_number_match(shash_DB, qry_shash, bins=100, N=1, verbose=0)
-        # Append to Matched
+        ## Append to Matched
         if num_matches > conf_hash.th:
-            print(f"\t{utt} matched with {utt_DB}")
             Matched_Dict[utt] = {'utt_DB':utt_DB, 'num_matches':num_matches, 'num_union':num_union}
             Matched_Shash_Dict[utt] = qry_shash
+            print(f"\t{utt}   matched with {utt_DB}\tnum_matches:{num_matches}\tnum_union:{num_union}")
             break
-        # Append to Unmatched (if there exist a match, this will show the 2nd best match)
+        ## Append to Unmatched
         if num_matches > max_so_far:
+            # If there exist candidates, this will show the seconds best match that did not
+            #   1) cross the threshold.
+            #   2) did not get better match than the one that did cross the threshold.
+            # We save this anyway because, just in case we want 2nd best.
             max_so_far = num_matches
             Unmatched_Dict[utt] = {'utt_DB':utt_DB, 'num_matches':num_matches, 'num_union':num_union}
 
+    ## Verbose for Unmatched
+    if len(CandidateSet)==0:
+        Unmatched_Dict[utt] = {'remarks':f'{utt}\t has no candidates from DB_type={conf_db.DB_type}'}
+    elif not utt in Unmatched_Dict:
+        Unmatched_Dict[utt] = {'remarks':f'{utt}\t has no additional candidates from DB_type={conf_db.DB_type}'}
+    elif (not utt in Matched_Dict) or (Unmatched_Dict[utt]['utt_DB'] != Matched_Dict[utt]['utt_DB']):
+            ## (show best that did not qualify)
+            print(f"\t{utt} unmatched with {Unmatched_Dict[utt]['utt_DB']}\tnum_matches:{Unmatched_Dict[utt]['num_matches']}\tnum_union:{Unmatched_Dict[utt]['num_union']}")
+
     ## Milestone
-    if not utt in Unmatched_Dict:
-        Unmatched_Dict[utt] = {'remarks':f'{utt} : {wav_path} has no candidates from DB_type={conf_db.DB_type}'}
     milestone()
 
 #################################################################

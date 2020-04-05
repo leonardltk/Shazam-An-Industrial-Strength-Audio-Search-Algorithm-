@@ -55,6 +55,8 @@ class QRY_conf():
         self.wav_scp=os.path.join(self.data_dir,'wav.scp')
         ## Match details
         self.qry2db=os.path.join(self.data_dir,'qry2db')
+        self.db2qry=os.path.join(self.data_dir,'db2qry')
+        self.sorted_stats=os.path.join(self.data_dir,'sorted_stats')
         ## Split details
         self.split_dir=os.path.join(self.data_dir,'split')
         if 1:
@@ -72,6 +74,7 @@ class QRY_conf():
             ## From Data
             self.exp_wavscp_dict=os.path.join(self.exp_dir,'wavscp_DICT')
             self.exp_qry2db_dict=os.path.join(self.exp_dir,'qry2db_DICT')
+            self.exp_db2qry_dict=os.path.join(self.exp_dir,'db2qry_DICT')
             ## Experiments
             self.exp_Unmatched_Dict=os.path.join(self.exp_dir,'Unmatched_Dict')
             self.exp_Matched_Dict=os.path.join(self.exp_dir,'Matched_Dict')
