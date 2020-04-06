@@ -1,5 +1,6 @@
 #!/usr/bin/bash
-conda activate YOUR_ENVIRONMENT # Py3_6_v1
+conda activate YOUR_ENVIRONMENT
+# conda activate Py3_6_v1
 << COMMENTS
     python 3.6
     audiofile              0.2.2

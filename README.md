@@ -25,9 +25,24 @@ cd Shazam-An-Industrial-Strength-Audio-Search-Algorithm-
     If however, your audio is full song duration, set `self.th=self.threshold_long` to give less False Negatives.
 
 # Database : Hashing & Setting Up Look-Up Table (LUT)
+## Initial setting up of the database hashes
 ```bash
 ## Hashing the database, and storing them to a dictionary
 python -u ./utils/Hashing.py -DB_type $DB_type &> $logdir/Hashing.log
+```
+## Updating database hashes
+```bash
+## To add new data to the current database
+python -u ./utils/Hashing_update.py \
+    -DB_type $DB_type \
+    -add "./data/database/wav_add.scp" \
+    &> $logdir/Hashing_update.add.log
+
+## To remove existing data from the current database
+python -u ./utils/Hashing_update.py \
+    -DB_type $DB_type \
+    -delete "./data/database/wav_delete.scp" \
+    &> $logdir/Hashing_update.delete.log
 ```
 
 # Queries : Hashing & Matching
