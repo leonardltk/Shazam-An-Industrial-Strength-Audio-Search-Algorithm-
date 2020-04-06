@@ -7,26 +7,24 @@ if True: ## imports / admin
     import conf
     # 
     START_TIME=datetime.datetime.now()
-    datetime.datetime.now() - START_TIME
     print(f"===========\npython {' '.join(sys.argv)}\n    Start_Time:{START_TIME}\n===========")
     # 
     print('############ Printing Config Params ############')
     if True:
         parser=argparse.ArgumentParser(
-            description="Updating hashes of current database.\
-            \n\tFor -add : \
-                accepts a path with text format same as wav.scp, \
+            description="Updating hashes of current database.")
+        parser.add_argument('-DB_type')
+        parser.add_argument('-add', type=str, default=None, 
+            help="accepts a path with text format same as wav.scp, \
                 to indicate which uttid and its respective wave path to add to the database,\
                 existing uttid will be replaced\
-            \n\tFor -delete : \
-                accepts a path with text format same as wav.scp, \
+                ")
+        parser.add_argument('-delete', type=str, default=None, 
+            help="accepts a path with text format same as wav.scp, \
                 2nd column (wave path) can be empty, as it will be ignored.\
                 existing uttid names will be removed,\
                 non-existing uttid names will be ignored.\
                 ")
-        parser.add_argument('-DB_type')
-        parser.add_argument('-add', type=str, default=None)
-        parser.add_argument('-delete', type=str, default=None)
         # 
         args=parser.parse_args()
         DB_type=args.DB_type
