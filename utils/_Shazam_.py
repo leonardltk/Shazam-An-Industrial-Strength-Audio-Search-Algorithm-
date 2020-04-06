@@ -467,6 +467,18 @@ def addLUT(LUT, db_hash_in, name_in):
         if not key in LUT: LUT[key]=set()
         LUT[key].add(name_in)
     return LUT
+def removeLUT(LUT, db_hash_in, name_in):
+
+    if db_hash_in[0] is None:
+        print(f"\t{name_in} has no hash")
+        return LUT
+
+    for key in db_hash_in[0]:
+        if key in LUT: LUT[key].remove(name_in)
+        if len(LUT[key]) == 0 :
+             LUT.pop(key)
+
+    return LUT
 def searchLUT_v1(LUT, qry_hash_in, name_in):
     """
     Return a set of db with matching hash.
