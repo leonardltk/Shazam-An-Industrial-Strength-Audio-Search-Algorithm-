@@ -1,0 +1,14 @@
+prefix=/home/builder/packages/ffmpeg
+exec_prefix=${prefix}
+libdir=/home/builder/packages/ffmpeg/lib
+includedir=/home/builder/packages/ffmpeg/include
+
+Name: libavcodec
+Description: FFmpeg codec library
+Version: 58.35.100
+Requires: libswresample >= 3.3.100, libavutil >= 56.22.100
+Requires.private: 
+Conflicts:
+Libs: -L${libdir}  -lavcodec -pthread -lm -lx264
+Libs.private: 
+Cflags: -I${includedir}
