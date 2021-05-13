@@ -1,0 +1,605 @@
+syntax = "proto3";
+package bigoai;
+
+import "ocr_nlp_keywords.proto";
+
+option cc_generic_services = true;
+
+message FeatureMatchResponse {
+    string result = 1;
+    float distance = 2;
+}
+
+// 特征信息查询
+message FeatureMatchInfoQueryRequest {
+    string appId = 1;
+    string storename = 2; // 特征库名
+    string url = 3;
+    string featureId1 = 4;
+}
+
+// 特征命中后查询到素材库的结果
+message FeatureMatchInfo {
+    string id = 1;
+    uint32 dealType = 2;
+    string url = 3;
+    string remark = 4;
+}
+
+message ImageCoreRequest {
+    repeated string urls = 1;
+    repeated bytes images = 2;
+    repeated string modules = 3;
+}
+
+message ImageCoreResponse {
+    message Result {
+        repeated string module_name = 1;
+        repeated float score = 2;
+        string url = 3;
+    }
+    repeated Result results = 1;
+    string version = 2;
+    uint32 status = 3;
+}
+
+message ImoVideoCoreResponse {
+    message ImoModelRes {
+        string model_name = 1;
+        repeated float raw_score = 2;
+        repeated int32 index = 3;
+    };
+    int32 status = 1;
+    string msg = 2;
+    repeated ImoModelRes results = 3;
+    float video_duration = 4;
+};
+
+message BigoMLServiceVideoCoreResponse {
+    message BigoMLServiceModelRes {
+        string model_name = 1;
+        repeated float raw_score = 2;
+        repeated int32 index = 3;
+    };
+    int32 status = 1;
+    string msg = 2;
+    repeated BigoMLServiceModelRes results = 3;
+    float video_duration = 4;
+};
+
+message ModelInfo {
+    string version = 1;
+    float score = 2;
+    float threshold = 3;
+}
+
+message ImoGroupChatMatchRequest {
+    string id = 1;
+    string op = 2; // sim feabture db. operator[write/read/delete/query]
+    bytes video = 3;
+    repeated bytes images = 4;
+    string url = 5;
+    string resource_id = 7;
+    message VideoMessage {
+        string review_status = 1;
+        string cutme_id = 2;
+        string create_time = 3;
+        string country = 4;
+        string logo = 5;
+        string source = 6;
+        string info_id = 7;
+    }
+    VideoMessage videoinfo = 6;
+    repeated string post_ids = 8;
+    repeated string urls = 9;
+}
+
+message ImoGroupChatMatchResponse {
+    message GroupReview {
+        string id = 1;
+        string review_url = 2;
+        string review_status = 3;
+        string review_time = 4;
+        string info_id = 5;
+    };
+    message GroupAttr {
+        string group_status = 1;
+        string group_passed_cnt = 2;
+        string group_punish_a_cnt = 3;
+        string group_punish_b_cnt = 4;
+        string group_processed_cnt = 5;
+        string group_url = 6;
+        string group_review_status = 7;
+        string group_review_time = 8;
+        string available_time = 9;
+        string group_600_cnt = 10;
+        string group_602_cnt = 11;
+        string group_604_cnt = 12;
+        string group_606_cnt = 13;
+        string group_reject_cnt = 15;
+        string group_ignore_cnt = 16;
+        string group_trivial_cnt = 17;
+        string group_label = 18;
+        string info_id = 19;
+        string group_size = 14;
+        repeated GroupReview group_reviews = 20;
+    };
+
+    string result = 1;
+    float distance = 2;
+    string unique_id = 3;
+    int32 video_status = 4;
+    string group_id = 5;
+    GroupAttr group_attr = 6;
+    repeated GroupReview group_reviews = 7;
+    string serial_id = 8;
+}
+
+message ImoDiscoverResponse {
+  string result = 1;
+  float distance = 2;
+  string unique_id = 4;
+  int32 video_status = 5;
+  string group_id = 6;
+  string dup_group_id = 17;
+  message GroupReview{
+    string id = 1;
+    string review_url = 2;
+    string review_status = 3;
+    string review_time = 4;
+  };
+  repeated GroupReview group_reviews = 8;
+  message GroupAttr{
+    string group_status = 1;
+    string group_600_cnt = 2;
+    string group_602_cnt = 10;
+    string group_604_cnt = 3;
+    string group_606_cnt = 4;
+    string group_ignore_cnt = 13;
+    string group_reject_cnt = 14;
+    string group_passed_cnt = 16;
+    string group_quality_cnt = 15;
+    string group_processed_cnt = 5;
+    string group_url = 6;
+    string group_review_status = 7;
+    string group_review_time = 8;
+    string available_time = 9;
+    repeated GroupReview group_reviews = 11;
+    string group_id = 12;
+  };
+  GroupAttr group_attr = 9;
+  string serial_id = 10;
+  repeated float distances = 11;
+  repeated string results = 12;
+  repeated string group_ids = 13;
+  repeated int32 info_status = 14;
+  repeated string unique_ids = 15;
+  repeated GroupAttr group_attrs = 16;
+};
+
+
+message WhitelistMatchRequest {
+    message VideoMessage {
+        string review_status = 1;
+        string cutme_id = 2;
+        string create_time = 3;
+        string country = 4;
+        string logo = 5;
+        string source = 6;
+    }
+    string id = 1;
+    string op = 2;
+    string url = 3;
+    repeated bytes images = 4;
+    VideoMessage videoinfo = 5;
+}
+
+// 白名单库结果
+message WhitelistMatchResult {
+    string id = 1;
+    string result = 2;
+    float distance = 3;
+    string group_id = 4;
+    int32 video_status = 5;
+}
+
+message VbrRetrievalRequest {
+    message VideoMessage {
+        string create_time = 3;
+        string country = 4;
+        string uid = 2;
+    }
+    string id = 1;
+    string op = 2;
+    string url = 3;
+    string business = 4;
+    bytes video = 5;
+    VideoMessage videoinfo = 6;
+}
+
+message FaceAuditRequest {
+    string op = 1;
+    string uid = 2;
+    string url = 3;
+    bytes image = 4;
+    string country = 5;
+    string business = 6;
+    string appid = 7;
+    string create_time = 8;
+    repeated string models = 9;
+};
+
+message HelloFaceAuditResponse {
+    message PostIdInfo {
+      string post_id = 1;
+      string uid = 2;
+      string url = 3;
+      string country = 4;
+      string business = 5;
+      string create_time = 6;
+    }
+    message HitResult {
+      string group_id = 1;
+      float score = 2;
+      repeated PostIdInfo postid_infos = 3;
+      int32 status = 4;
+    }
+    string post_id = 1;
+    repeated HitResult hit_result = 2;
+    string version = 3;
+};
+
+
+
+// message LikeAudioSimWrap {
+//   message LikeAudioInfo {
+//     int32 act = 1;
+//     string results = 2;
+//     string yhash = 3;
+//   }
+//   int32 status = 1;
+//   int32 cluster_id = 2;
+//   map<string, LikeAudioInfo> results = 3;
+// }
+
+// message ShashRequest {
+//     string op = 1;
+//     string uid = 2;
+//     string url = 3;
+//     bytes image = 4;
+//     string country = 5;
+//     string business = 6;
+//     string appid = 7;
+//     string create_time = 8;
+//     repeated string models = 9;
+// };
+message HelloShashResponse {
+    message PostIdInfo {
+      string post_id = 1;
+      string uid = 2;
+      string url = 3;
+      string country = 4;
+      string business = 5;
+      string create_time = 6;
+    }
+    message HitResult {
+      string group_id = 1;
+      float score = 2;
+      repeated PostIdInfo postid_infos = 3;
+      int32 status = 4;
+    }
+    string post_id = 1;
+    repeated HitResult hit_result = 2;
+    string version = 3;
+};
+
+
+
+message FineGrainedModelResponse {
+  string name = 1;
+  string version = 2;
+  int32 status = 3;
+  float threshold = 4;
+  float score = 5;
+  string err_msg = 6;
+  FineGrainedModelMetadata metadata = 7;
+};
+
+message FineGrainedModelMetadata {
+  // metadata from softporn_global
+  float score_nudity_a = 1;
+  float score_nudity_b = 2;
+  float score_inappropriate_sitting = 3;
+  float score_inappropriate_dressing = 4;
+  float score_private_part_shape = 5;
+  float score_normal = 6;
+  float threshold_inappropriate_sitting_autoprocess = 7;
+  float score_horror = 8;
+  float score_accident = 9;
+  float threshold_horror = 10;
+  float threshold_accident = 11;
+  float threshold_heavy_porn_autoprocess = 12;
+  float threshold_child_porn_autoprocess = 13;
+}
+
+message LikeCoreResponse {
+  message ModelRes {
+    string model_name  = 1;
+    int32 audit_status = 3;
+    repeated float raw_score    = 2;
+    repeated int32 index        = 4;
+  };
+  int32 status         = 1;
+  string msg           = 2;
+  repeated ModelRes results     = 3;
+  repeated string image_urls    = 4;
+  float video_duration = 5;
+};
+
+
+message GeneralFeatureWrap {
+  map<string, GeneralFeatureResponse> results = 1;
+};
+
+message GeneralFeatureResponse{
+  repeated float embedding = 1;
+  int32 dim = 2;
+  string result = 3;
+  float distance = 4;
+  string f_node = 5;
+  repeated string candidations_postid = 6;
+  repeated float candidations_distance = 7;
+  string candidations_video = 8;
+  float candidations_video_distance = 9;
+  int32 video_status = 10;
+  string group_id = 11;
+};
+
+message TaggingServiceResponse {
+  string service = 1;
+  string version = 2;
+  int32 status = 3;
+  string err_msg = 4;
+  message Tag {
+    string name = 1;
+    float score = 2;
+    float threshold = 3;
+    //float threshold_autoprocess = 4;
+  };
+  repeated Tag tags = 5;
+  // the following are just for compatibility with FineGrainedModelResponse
+  string name = 6;
+  float threshold = 7;
+  float score = 8;
+  FineGrainedModelMetadata metadata = 9;
+};
+
+
+message OCRBasedLowQualityInfo {
+  message CopyContent{
+    string LikeeID = 1 ;
+    string username_yyuid = 2;
+  };
+  message TextfullContent{
+    string ocr_type = 1;
+    string fst_style = 2;
+  };
+  string post_id = 1;
+  string version = 2;
+  bool copy_statu = 3;
+  CopyContent copy_content = 4;
+  bool textfull_statu = 5;
+  TextfullContent textfull_content = 6;
+};
+
+
+message LikeOcrInfo {
+  string text = 1;
+  float ratio = 2;
+  string lang = 3;
+  string version = 4;
+  string hard_mark = 5;
+  float score = 6;
+  string bbox = 7;
+  string sep_score = 8;
+};
+
+message LikeOcrResponse {
+  message LikeOcrWrap {
+    string err_msg = 1;
+    repeated LikeOcrInfo results = 2;
+  }
+
+  int32 status = 1;
+  map<string, LikeOcrWrap> results = 2;
+}
+
+
+
+message GeneralFeatureRequest{
+  repeated float embedding = 1;
+  int32 dim = 2;
+  string post_id = 3;
+  string url = 4;
+  string op = 5;
+  string id = 6;
+  bytes video = 7;
+};
+
+message LikeeFaceAuditResponse {
+  message HitPostid {
+    string post_id = 1;
+    float score = 2;
+  }
+  string id = 1;
+  repeated HitPostid hit_postids = 2;
+};
+
+message LikeeFaceAuditReview {
+  repeated string data_infos = 1;
+};
+
+message ImageWatermarkRequest {
+    repeated string module_name = 1;
+    repeated string ocrs = 2;
+    repeated string urls = 3;
+};
+
+message Results {
+    uint32 score = 1;
+    repeated string clsnames = 2;
+};
+
+message ImageWatermarkResponse {
+    repeated Results frames = 1;
+    uint32 status = 2;
+}
+  
+message ExposureWarpResponse{
+  map<string, ExposureResponse> results = 1;
+}
+message ExposureResponse {
+    string postid = 1;
+    repeated float blur_clear_scores = 2;
+    repeated float exposure_scores = 3;
+    repeated float noise_scores = 4;
+    string version = 5;
+    string business = 6;
+    repeated int32 content_qscores = 7;
+    float top3_avg_score = 8;
+    float img_score = 9;
+};
+message LowQualityResult{
+    float ppt_result = 1;
+    float blackscreen_result = 2;
+    int32 frame_num = 3;
+    string result = 4;
+    string version = 5;
+    string service_name = 6;
+}
+
+message FaceAuditResponse {
+    message PostIdInfo {
+        string post_id = 1;
+        string uid = 2;
+        string url = 3;
+        string country = 4;
+        string appid = 5;
+    }
+    message HitResult {
+        string group_id = 1;
+        float score = 2;
+        repeated PostIdInfo postid_infos = 3;
+        string attach_info = 4;
+        int32 status = 5;
+    }
+    string post_id = 1;
+    repeated string ids = 2;
+    uint32 ids_num = 3;
+    repeated HitResult hit_result = 4;
+    int32 face_num = 5;
+    string version = 6;
+};
+
+message WatermarkWrap {
+  message WatermarkInfo
+  {
+    message RetrievalResult
+    {
+      string clsname = 1;
+      float score = 2;
+    };
+    int32 xgb_score = 1;
+    repeated float xgb_l1_score = 2;
+    repeated RetrievalResult retrieval_result = 3;
+    repeated float max_retrieval_scores = 4;
+    string version = 5;
+    repeated string cls_names = 6;
+  };
+  map<string, WatermarkInfo> results = 1;
+  int32 status = 2;
+  int32 is_risk = 3;
+}
+
+message LikeAudioSimWrap {
+  message LikeAudioInfo {
+    int32 act = 1;
+    string results = 2;
+    string yhash = 3;
+  }
+  int32 status = 1;
+  int32 cluster_id = 2;
+  map<string, LikeAudioInfo> results = 3;
+}
+
+message WatermarkImoRequest {
+    string op = 1;
+    string post_id = 2;
+    repeated bytes images = 3;
+    bytes image = 4;
+    bytes video = 5;
+    bool isImage = 6;
+    string id = 7;
+    repeated string module_name = 8;
+};
+
+message WatermarkImoResponse {
+    string post_id = 1;
+    repeated float scores = 2;
+    repeated string cls_names = 3;
+    uint32 det_flag = 4;
+};
+
+message ImageWatermarkImoResponse {
+    message RetrievalResult {
+        string clsname = 1;
+        float score = 2;
+    };
+    string post_id = 1;
+    repeated string imgids = 2;
+    repeated string clsids = 3;
+    repeated string clsnames = 4;
+    
+    repeated float det_scores = 5;
+    repeated string det_cls_names = 6;
+    repeated float features = 11;
+    repeated RetrievalResult retrieval_result = 7;
+    repeated float max_retrieval_scores = 8;
+    
+    repeated string ids = 9; // for sscan
+    uint32 ids_num = 10;
+    string version = 12;
+    uint32 det_flag = 13;
+    uint32 status = 14;
+};
+
+message VideoWatermarkImoResponse {
+    message RetrievalResult {
+        string clsname = 1;
+        float score = 2;
+    };
+    string post_id = 1;
+    repeated string imgids = 2;
+    repeated string clsids = 3;
+    // repeated string clsnames = 4;
+
+    int32 xgb_score = 5;
+    repeated float xgb_l1_score = 6;
+    repeated float features = 11;
+    repeated RetrievalResult retrieval_result = 7;
+    repeated float max_retrieval_scores = 8;
+        
+    repeated string ids = 9; // for sscan
+    uint32 ids_num = 10;
+    string version = 12;
+    repeated string cls_names = 13;
+    uint32 status = 14;
+};
+
+message ImoFakevideoRequest {
+    bytes image = 1;
+}
+
+message ImoFakevideoResponse {
+    string score = 1;
+}

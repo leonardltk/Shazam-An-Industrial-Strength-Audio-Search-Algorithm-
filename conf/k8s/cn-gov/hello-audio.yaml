@@ -1,0 +1,119 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gov-hello-audio-consumer
+  namespace: gov
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gov-hello-audio-consumer
+  template:
+    metadata:
+      labels:
+        app: gov-hello-audio-consumer
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      affinity:
+         nodeAffinity:
+           requiredDuringSchedulingIgnoredDuringExecution:
+             nodeSelectorTerms:
+             - matchExpressions:
+               - key: audio
+                 operator: In
+                 values:
+                 - "true"
+         podAntiAffinity:
+           requiredDuringSchedulingIgnoredDuringExecution:
+           - labelSelector:
+               matchExpressions:
+               - key: app
+                 operator: In
+                 values:
+                 - gov-hello-audio-consumer
+             topologyKey: kubernetes.io/hostname
+      restartPolicy: Always
+      hostNetwork: True
+      imagePullSecrets:
+      - name: harbor
+      terminationGracePeriodSeconds: 3
+      containers:
+      - name: consumer
+        resources:
+          limits:
+            cpu: 2       # Required
+            memory: 18Gi # Required
+          requests:
+            cpu: 1
+            memory: 8Gi
+        imagePullPolicy: Always
+        image: __IMAGE__
+        command:
+        - "./kafka-consumer-cpp"
+        - "-usercode_in_pthread=true"
+        - "-fdfs_url=http://bfs.ppx520.com/file/new"
+        - "-fdfs_bucket=vio-music"
+        - "-fdfs_secret=YVAJkGszUVZVrBty"
+   
+        - "-audio_core_endpoint=http://localhost:8080"
+        - "-audio_core_uri=/api/hello/audio-core"
+        - "-audio_core_threshold_rule=porn:default:0.69,explos:default:0.946,voice_activity:default:0.1545"
+        - "-audio_core_max_retry=3"
+        - "-audio_core_timeout_ms=5000"
+        - "-audio_core_models=porn,explos,voice_activity"
+
+        - "-dispatcher_batch_size=16"
+
+        - "-asr_timeout_ms=10000"
+        - "-asr_url=http://localhost:8080/api/kaldi"
+
+        - "-upload_hive_extra_info=ml_service:gov-hello-audio-consumer"
+        - "-enable_modules=KafkaConsumerModule,NormalizationDownloaderModule,HelloAudioCodecModule,AudioDurationFilterModule,AsrModule,FastDfsUploadModule,NormalizationReviewModule,UploadHiveModule,EndModule"
+        - "-normalization_downloader_concurrent_request=12"
+        - "-kafka_brokers=kafka-rec52.jja.bigo-out:9092,kafka-rec53.jja.bigo-out:9092,kafka-rec54.jja.bigo-out:9092,kafka-rec55.jja.bigo-out:9092,kafka-rec56.jja.bigo-out:9092"
+        - "-kafka_topic=gov_ml_hello_audio_audit" 
+        - "-kafka_groupid=gov_ml_hello_audio_audit" 
+        - "-dispatcher_thread_num=21" 
+        - "-dispatcher_enable_submodule=AudioCoreSubModule"
+        - "-hello_audio_codec_enable_aac=false"
+        - "-connect_timeout_as_unreachable=20"
+        - "-health_check_interval=1"
+        - "-defer_close_second=10"
+
+        - "-asr_use_v2=true"
+        - "-asr_v2_word_appid=18"
+        - "-asr_v2_word_businessid=44"
+
+        ports:
+        - containerPort: 8000
+          hostPort: 8000
+        livenessProbe:
+          httpGet: 
+            path: /
+            port: 8000                                           # Required
+          initialDelaySeconds: 5
+          failureThreshold: 3
+          timeoutSeconds: 3
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8000                                            # Required
+          initialDelaySeconds: 5
+          timeoutSeconds: 3
+          periodSeconds: 10
+        volumeMounts:     #挂载volumes中定义的磁盘
+        - name: data
+          mountPath: /data
+        - name: tmp
+          mountPath: /tmp
+
+      terminationGracePeriodSeconds: 3
+      volumes:
+      - name: data
+        hostPath:
+          path: /data
+      - name: tmp
+        hostPath:
+          path: /tmp

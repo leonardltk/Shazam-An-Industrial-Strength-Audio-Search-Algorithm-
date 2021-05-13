@@ -1,0 +1,133 @@
+syntax = "proto2";
+package config; 
+
+import "config_submodule.proto";
+option cc_generic_services = true;
+
+message ModuleConfig {
+    // 公共配置
+    optional string instance_name   = 1;
+    required bool   enabled         = 2;                                    // 模块开关
+    required uint32 work_thread_num = 3;
+    optional uint32 queue_size      = 4 [default=128];
+
+    // 各模块自定义参数 
+    optional KafkaConsumerModuleConfig           kafka_consumer     = 10;
+    optional DispatcherModuleConfig              dispatcher         = 11;
+    optional DownloaderModuleConfig              downloader         = 12;
+    optional ModifyFailResModuleConfig           modify_fail_res    = 13;
+    optional IspFilterModuleConfig               isp_filter         = 14;
+    optional HelloAudioCodecModuleConfig         hello_audio_codec  = 15; 
+    optional DurationFilterModuleConfig          duration_filter    = 16;
+    optional AsrModuleConfig                     asr                = 17;
+    optional FastDfsUploadModuleConfig           fast_dfs_upload    = 18;
+    optional UploadHiveModuleConfig              upload_hive        = 19;    
+    optional ReviewModuleConfig                  review             = 20;
+    optional DuplicatedModuleConfig              duplicated         = 21;
+    optional SortModuleConfig                    sort               = 22;
+    optional TimestampFilterModuleConfig         timestamp_filter   = 23;
+}
+
+
+message DownloaderModuleConfig {
+    optional uint32 timeout_ms   = 1 [default=15000];
+    optional uint32 max_retry    = 2 [default=2];
+    optional string lb           = 3 [default="la"];
+    optional bool   enable_image = 4 [default=true];
+    optional bool   enable_video = 5 [default=true];
+    optional bool   enable_voice = 6 [default=true];
+}
+
+message ModifyFailResModuleConfig {
+    repeated string ignore_models = 1;
+}
+
+message KafkaConsumerModuleConfig {
+    required string brokers              = 1;
+    repeated string topic                = 2;
+    repeated string groupid              = 3;
+    optional bool   reset_earliest       = 4 [default=false];
+    optional uint32 rollback_offset      = 5 [default=0];
+    optional string callback_url         = 6 [default="http://infer-sg.ingress.bigoml.cc:8080/api/mock/callback"];
+    repeated string enable_appid         = 7;
+    repeated string enable_business_type = 8;
+}
+
+message IspFilterModuleConfig {
+    required int32 pass_number = 1;
+    required bool  sp_logic    = 2;
+}
+
+message DispatcherModuleConfig {
+    repeated SubModuleMap submodule_conf         = 1;
+    optional uint32       batch_size             = 2 [default=1];
+    optional uint32       block_queue_timeout_ms = 3 [default=100];  // 组batch时，最大同步阻塞队列最大阻塞时长，超过此时长，队列返回空，此时实际batchsize将小于配置的batchsize
+}
+
+message HelloAudioCodecModuleConfig {
+    optional uint32 out_sample_rate    = 1 [default=16000];
+    optional bool   enable_wav         = 2 [default=true];
+    optional bool   enable_aac         = 3 [default=false];
+    optional string encode_sidecar_url = 4 [default=""];
+}
+
+message DurationFilterModuleConfig {
+    optional int32 max_second = 1[default=600]; // imo video max second
+    optional int32 min_second = 2[default=4];   // hello audio min second
+}
+
+message AsrModuleConfig {
+    required bool            use_v2 = 1;
+    required SubModuleConfig submodule_conf = 2;
+}
+
+message FastDfsUploadModuleConfig {
+    optional uint32 timeout_ms           = 1 [default=5000];
+    optional string lb                   = 2 [default="la"];
+    optional string bucket               = 3 [default="vio-audio"];
+    optional uint32 expire_interval      = 4 [default=864000];
+    optional uint32 file_expire_interval = 5 [default=5184000];
+    optional string secret               = 6 [default="BYq3aUfZZcH771v4"];
+    optional string url                  = 7 [default="http://upload-imgsnap.bigo.sg/file/new"];
+}
+
+message UploadHiveModuleConfig {
+    optional uint32   timeout_ms    = 1 [default=1000];
+    optional string   lb            = 2 [default="la"];
+    optional uint32   max_retry     = 3 [default=1];
+    required string   url           = 4 ;
+
+    optional string   service_name     = 5; // Grafana关联, UploaderHiveModule可自动获取
+    optional string   enable_module    = 6; // Grafana关联, UploaderHiveModule可自动获取
+    optional string   enable_submodule = 7; // Grafana关联, UploaderHiveModule可自动获取
+    optional string   kafka_topic      = 8; // Grafana关联, UploaderHiveModule可自动获取
+    optional string   kafka_groupid    = 9; // Grafana关联, UploaderHiveModule可自动获取 
+    optional string   rewrite_business_type = 10 [default=""]; 
+}
+
+message ReviewModuleConfig {
+    optional uint32 timeout_ms = 1 [default=1500];
+    optional string lb         = 2 [default="la"];
+    optional uint32 max_retry  = 3 [default=1];
+    optional string appid      = 4 [default="4801"];
+}
+
+message DuplicatedModuleConfig {
+    optional uint32 timeout_ms = 1[default=2000];
+    optional uint32 password_index = 2;
+    optional string hosts = 3;
+    optional string prefix = 4[default="test"];
+    optional uint32 expire_second = 5[default=604800]; // 7Day
+    optional string op = 6;
+}
+
+message SortModuleConfig {
+    optional uint32 sort_buffer_size = 1[default=54000]; // 300second * 180QPS
+    optional uint32 delay_ms = 2[default=180000];
+}
+
+message TimestampFilterModuleConfig {
+    optional uint64 latest_timestamp_ms   = 1[default=0];
+    optional uint64 earliest_timestamp_ms = 2[default=0];
+    optional uint64 expire_ms             = 3[default=0];
+}

@@ -1,0 +1,37 @@
+syntax = "proto2";
+package bigoai;
+
+import "hive.proto";
+
+option cc_generic_services = true;
+
+message UploadDuplicateKafka {
+    message kakashi { required string video_group = 1; };
+    required kakashi content = 1;
+    required uint32 type = 2;
+    required string video_id = 3;
+};
+
+message DeduplicateResultHive {
+    optional HiveElemString videoid = 1;
+    optional HiveElemString video_group = 2;
+    optional HiveElemUInt32 post_time = 3;
+    optional HiveElemString dedup_time = 4;
+};
+
+message DataMElemString {
+    optional string value = 1;
+    optional int32 type = 2;
+    optional int32 seq = 3;
+};
+message DeduplicateResultDataM {
+    optional DataMElemString appid = 1;
+    optional DataMElemString source = 2;
+    optional DataMElemString uid = 3;
+    optional DataMElemString seqid = 4;
+    optional DataMElemString post_id = 5;
+    optional DataMElemString url = 6;
+    optional DataMElemString ext_info = 7;
+    optional DataMElemString country = 8;
+    optional DataMElemString flow = 9;
+};

@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package bigoai;
+
+option cc_generic_services = true;
+
+message AuditDataSubType {
+    string content = 1;
+    string id = 2;
+    string sid = 3;
+    map<string, string> subExtraData = 4;
+    map<string, string> detailMlResult = 5;
+    map<string, string> modelInfo = 6;
+    map<string, float> threshold = 7;
+    // bool download_success              = 7; // 机审使用，下载成功
+    string failed_module = 8; // 机审使用，下载成功
+}
+
+message AuditData {
+    repeated AuditDataSubType video = 1;
+    repeated AuditDataSubType voice = 2;
+    repeated AuditDataSubType live = 3;
+    repeated AuditDataSubType pic = 4;
+    repeated AuditDataSubType text = 5;
+}
+
+message NormaliztionAuditMessage {
+    string orderId = 1;
+    string uid = 2;
+    string appId = 3;
+    string businessType = 4;
+    string country = 5;
+    uint64 reportTime = 6; // ms
+    string sourceType = 7;
+    map<string, string> extraData = 8;
+    map<string, string> detailMlResult = 9; // key: modelname, value: pass/review/block/fail
+    AuditData data = 10;
+    map<string, uint64> timestamp = 11; // ms
+    string callbackUrl = 12;
+}
+
+// {"status": 200, "results": {"ocr-audit": {"results": [{"text": "", "ratio": 0, "lang": "",
+// "version": "GlobalOCR_v2.6.9", "hard_mark": ""}], "status": 200}}}
+message NormalizationOCRResponse {
+    message OCRText {
+        string text = 1;
+        int32 ratio = 2;
+        string lang = 3;
+        string version = 4;
+        string hard_mark = 5;
+    }
+
+    message OCRTextList { repeated OCRText results = 1; }
+
+    int32 status = 1;
+    map<string, OCRTextList> results = 2;
+}

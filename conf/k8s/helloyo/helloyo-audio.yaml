@@ -1,0 +1,130 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: helloyo-audio-consumer
+  namespace: helloyo 
+  annotations:
+    reloader.stakater.com/auto: "true"
+spec:
+  replicas: 6
+  selector:
+    matchLabels:
+      app: helloyo-audio-consumer
+  template:
+    metadata:
+      labels:
+        app: helloyo-audio-consumer
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      affinity:
+         nodeAffinity:
+           requiredDuringSchedulingIgnoredDuringExecution:
+             nodeSelectorTerms:
+             - matchExpressions:
+               - key: audio
+                 operator: In
+                 values:
+                 - "true"
+      restartPolicy: Always
+      imagePullSecrets:
+      - name: harbor
+      terminationGracePeriodSeconds: 3
+      containers:
+      - name: consumer
+        resources:
+          limits:
+            cpu: 16       # Required
+            memory: 28Gi # Required
+          requests:
+            cpu: 8
+            memory: 14Gi
+        imagePullPolicy: Always
+        image: __IMAGE__
+        command:
+        - "./kafka-consumer-cpp"
+        - "-usercode_in_pthread=true"
+        - "-connect_timeout_as_unreachable=20"
+        - "-health_check_interval=1"
+        - "-config_file=/app/runtime/helloyo-audio.conf"
+
+        livenessProbe:
+          httpGet: 
+            path: /
+            port: 8000                                           # Required
+          initialDelaySeconds: 5
+          failureThreshold: 3
+          timeoutSeconds: 3
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8000                                            # Required
+          initialDelaySeconds: 5
+          timeoutSeconds: 3
+          periodSeconds: 10
+        volumeMounts:     #挂载volumes中定义的磁盘
+        - name: data
+          mountPath: /data
+        - name: tmp
+          mountPath: /tmp
+        - name: config
+          mountPath: /app/runtime
+      terminationGracePeriodSeconds: 3
+      volumes:
+      - name: data
+        hostPath:
+          path: /data
+      - name: tmp
+        hostPath:
+          path: /tmp
+      - name: config
+        configMap:
+          name: helloyo-audio-consumer
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: helloyo-audio-consumer
+  name: helloyo-audio-consumer
+  namespace: helloyo 
+spec:
+  ports:
+  - name: http
+    port: 8000
+    targetPort: 8000
+  selector:
+    app: helloyo-audio-consumer
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: helloyo-audio-consumer
+    release: pga
+  name: helloyo-audio-consumer
+  namespace: helloyo 
+spec:
+  endpoints:
+  - interval: 5s
+    path: /brpc_metrics
+    port: http
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_endpoint_node_name]
+      separator: ;
+      regex: (.*)
+      targetLabel: node
+      replacement: $1
+      action: replace
+
+  jobLabel: helloyo-audio-consumer
+  namespaceSelector:
+    matchNames:
+    - helloyo
+  selector:
+    matchLabels:
+      app: helloyo-audio-consumer

@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-audio-consumer-dx
+  namespace: hello
+  annotations:
+    reloader.stakater.com/auto: "true"
+spec:
+  replicas: 9
+  selector:
+    matchLabels:
+      app: hello-audio-consumer
+  template:
+    metadata:
+      labels:
+        app: hello-audio-consumer
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      affinity:
+         nodeAffinity:
+           requiredDuringSchedulingIgnoredDuringExecution:
+             nodeSelectorTerms:
+             - matchExpressions:
+               - key: audio
+                 operator: In
+                 values:
+                 - "true"
+               - key: topology.kubernetes.io/region
+                 operator: In
+                 values:
+                 - "dx"
+         podAntiAffinity:
+           preferredDuringSchedulingIgnoredDuringExecution:
+           - weight: 100
+             podAffinityTerm:
+               labelSelector:
+                 matchExpressions:
+                 - key: app
+                   operator: In
+                   values:
+                   - hello-audio-consumer
+               topologyKey: topology.kubernetes.io/zone
+      restartPolicy: Always
+      hostNetwork: True
+      imagePullSecrets:
+      - name: harbor
+      terminationGracePeriodSeconds: 3
+      containers:
+      - name: consumer
+        resources:
+          limits:
+            cpu: 12       # Required
+            memory: 18Gi # Required
+          requests:
+            cpu: 6
+            memory: 8Gi
+        imagePullPolicy: Always
+        image: __IMAGE__
+        command:
+        - "./kafka-consumer-cpp"
+        - "-connect_timeout_as_unreachable=20"
+        - "-health_check_interval=1"
+        - "-defer_close_second=10"
+        - "-config_file=/app/runtime/hello-audio-dx.conf"
+
+        ports:
+        - containerPort: 8000
+          hostPort: 8000
+
+        livenessProbe:
+          httpGet: 
+            path: /
+            port: 8000                                           # Required
+          initialDelaySeconds: 5
+          failureThreshold: 3
+          timeoutSeconds: 3
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8000                                            # Required
+          initialDelaySeconds: 5
+          timeoutSeconds: 3
+          periodSeconds: 10
+        volumeMounts:     #挂载volumes中定义的磁盘
+        - name: data
+          mountPath: /data
+        - name: tmp
+          mountPath: /tmp
+        - name: config
+          mountPath: /app/runtime
+
+      terminationGracePeriodSeconds: 3
+      volumes:
+      - name: data
+        hostPath:
+          path: /data
+      - name: tmp
+        hostPath:
+          path: /tmp
+      - name: config
+        configMap:
+          name: hello-audio-consumer-dx

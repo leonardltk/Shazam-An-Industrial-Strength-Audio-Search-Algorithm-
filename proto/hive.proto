@@ -1,0 +1,93 @@
+syntax = "proto3";
+package bigoai;
+
+option cc_generic_services = true;
+
+message HiveElemUInt64 {
+    uint64 value = 1;
+    int32 type = 2;
+    int32 seq = 3;
+}
+
+message HiveElemUInt32 {
+    uint32 value = 1;
+    int32 type = 2;
+    int32 seq = 3;
+}
+
+message HiveElemString {
+    string value = 1;
+    int32 type = 2;
+    int32 seq = 3;
+}
+
+message HiveElemValue {
+    string value = 1;
+    int32 seq = 2;
+}
+
+message HiveElemMapStr {
+    map<string, HiveElemValue> value = 1;
+    int32 type = 2;
+    int32 seq = 3;
+}
+
+message HiveElemVecStr {
+    repeated string value = 1;
+    int32 type = 2;
+    int32 seq = 3;
+}
+
+message StdAuditResultHive {
+    HiveElemString orderId = 1;
+    HiveElemString uid = 2;
+    HiveElemString appId = 3;
+    HiveElemString businessType = 4;
+    HiveElemString country = 5;
+    HiveElemUInt64 reportTime = 6;
+    HiveElemString sourceType = 7;
+    HiveElemMapStr extraData = 8;
+    HiveElemString data = 9;
+    HiveElemString timestamp = 10; // ms
+    HiveElemString callbackUrl = 11;
+    HiveElemString extendInfo = 12;
+    HiveElemMapStr detailMlResult = 13; // key: modelname, value: pass/review/block/fail
+}
+
+message AuditResultHive {
+    HiveElemUInt32 appid = 1;
+    HiveElemUInt32 reporttime = 2;
+    HiveElemUInt64 postid = 3;
+    HiveElemString videourl = 4;
+    HiveElemString country = 5;
+    HiveElemUInt32 status = 6;
+    HiveElemUInt32 uid = 7;
+    HiveElemUInt32 duration = 8;
+    HiveElemString modelstatus = 9;
+    HiveElemString modelresults = 10;
+    HiveElemString extras = 11;
+    HiveElemString day = 12;
+}
+
+message AuditCostStatisticHive {
+    HiveElemUInt32 app_id = 1;
+    HiveElemString id = 2;
+    HiveElemUInt64 uid = 3;
+    HiveElemUInt64 report_time = 4;
+    HiveElemString url = 5;
+    HiveElemUInt64 val1 = 6;
+    HiveElemUInt64 val5 = 7;
+    HiveElemUInt64 val11 = 8;
+    HiveElemUInt64 val13 = 9;
+    HiveElemUInt64 val14 = 10;
+    HiveElemUInt64 val16 = 11;
+    HiveElemUInt64 val17 = 12;
+    HiveElemUInt64 val18 = 13;
+    HiveElemUInt64 val19 = 14;
+    HiveElemString extras = 15;
+    HiveElemUInt64 val12 = 16;
+    HiveElemUInt64 val15 = 17;
+    HiveElemUInt64 val20 = 18;
+    HiveElemUInt64 val21 = 19;
+    HiveElemUInt64 val22 = 20;
+}

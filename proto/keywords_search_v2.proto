@@ -1,0 +1,47 @@
+syntax = "proto2";
+
+option cc_generic_services = true;
+
+package keywords;
+
+message ConfigPb {
+    optional bool search_by_keyword = 1 [ default = true ];
+    optional bool search_by_regular = 2 [ default = true ];
+    optional int32 keyword_type = 3 [ default = 0 ];
+}
+
+message MapFieldEntry {
+    optional string key = 1;
+    optional string value = 2;
+}
+
+message Info {
+    optional ConfigPb config = 1;
+    optional bytes content = 2;
+    optional string uid = 3;
+    optional string country = 4;
+    optional uint32 appid = 5;
+    optional uint32 srcid = 6;
+    optional MapFieldEntry params = 7;
+};
+
+message InfoBatch { repeated Info infos = 1; };
+
+message HitRulePb {
+    optional int32 keyword_type = 1;
+    optional int32 level = 2;
+    optional string rule = 3;
+    optional int32 forbiddent_type = 4;
+};
+
+message HitResultPb {
+    optional bool is_hit = 1; // 0: 未命中敏感词， 1： 命中敏感词
+    repeated HitRulePb rule_list = 2;
+    optional string regular = 3;
+    optional string err_desc = 4;
+};
+
+service KeywordsSearch {
+    rpc matchRule(Info) returns (HitResultPb);
+    rpc searchWithStatistics(Info) returns (HitResultPb);
+}

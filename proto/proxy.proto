@@ -1,0 +1,148 @@
+syntax = "proto3";
+package bigoai;
+
+option cc_generic_services = true;
+
+import "submodule.proto";
+
+message Vinfo {
+    repeated int32 shape = 1; // [H, W, C], [N, H, W, C]
+    float fps = 2;
+    float kbps = 3;
+    int32 height = 4;
+    int32 width = 5;
+    float duration = 6;
+
+    repeated int64 video_pts_usec = 7;
+    repeated int64 video_dts_usec = 8;
+    int32 first_dts = 9;
+    repeated int32 frame_index = 10;
+}
+
+message Request {
+    enum DataType {
+        // signed 16-bits integer, sample rate 16000 Hz
+        PCM_S16_SR16000 = 0;
+        // PCM_F32_SR16000 = 1; // Assuming amplitude is normalized.
+
+        // *_FILE is namely a file, if you save it to disk (without modification),
+        // it should be readable by corresponding audio player.
+        WAV_FILE = 100;
+
+        // Following file doesn't guarantee to work (decoder not ready)
+        // MP3_FILE = 101;
+    }
+    string id = 1;
+    string url = 2;
+    string seqID = 3;
+    bytes video = 4;
+    repeated bytes images = 5;
+    repeated bytes audios = 6;
+    repeated string models = 10;
+    string post_id = 11;
+    bool disableDecode = 12;
+    string params = 13; // json str.
+    string op = 14; // sim feabture db. operator[write/read/delete]
+    bytes image = 15;
+    bool isImage = 16;
+    bytes data = 17;
+    bool cache = 18;
+    bool debug = 19;
+    float video_distance_threshold = 20;
+    string source = 21;
+    string uid = 22;
+    int32 cutmeid = 23;
+    string attachinfo = 24;
+    bytes cover = 25;
+    string cutmeurl = 26;
+    string video_url = 30;
+    string strategy = 31;
+    bool is_duet = 32;
+    string country = 33;
+    string appid = 35;
+    bool minors_39_flag = 34;
+    repeated string run_model_names = 27;
+    repeated float run_model_thresholds = 28;
+    VideoMessage videoinfo = 29;
+    bytes video_bitmap = 40; // Video after decode. From decode cluster.
+    LikeOcrInfo ocrinfo = 41;
+    Vinfo Vinfo = 42;
+
+    repeated bytes pcms = 50;
+    DataType data_type = 51;
+};
+
+
+message PictureRequest {
+    uint64 log_id = 1;
+    string app_id = 2;
+    bytes data = 10;
+};
+
+message PictureResponse {
+    int32 err_no = 1;
+    string err_msg = 2;
+    bytes result = 10;
+};
+
+message Tensor {
+    string name = 1;
+    string type = 2;
+    repeated int32 shape = 3;
+    repeated float data = 10;
+    bytes buffer = 11;
+}
+
+message TensorArray {
+    string name = 1;
+    repeated Tensor tensors = 10;
+}
+
+message ReqData {
+    repeated string types = 1;
+    repeated int32 indexes = 2;
+    repeated TensorArray tensor_arrays = 10;
+};
+
+message ResData {
+    repeated TensorArray tensor_arrays = 10;
+};
+
+message ImageResponse {
+    message ImageModelRes {
+        repeated float score = 1; // Support batch response.
+        string version = 2;
+    };
+    int32 status = 1;
+    string msg = 2;
+    map<string, ImageModelRes> results = 3;
+};
+
+message VideoResponse {
+    message VideoModelRes {
+        repeated float score = 1;
+        repeated int32 index = 2;
+        string version = 3;
+    };
+    int32 status = 1;
+    string msg = 2;
+    map<string, VideoModelRes> results = 3;
+};
+
+message VideoMessage {
+    string review_status = 1;
+    string cutme_id = 2;
+    string create_time = 3;
+    string country = 4;
+    string logo = 5;
+    string source = 6;
+};
+
+message EncodeRequest {
+    string id = 1;
+    bytes pcm = 2;
+    int32 pcm_sample_rate = 3;
+    string enc_type = 4;
+};
+
+message EncodeResponse { bytes content = 1; }

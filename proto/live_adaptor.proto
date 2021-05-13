@@ -1,0 +1,142 @@
+syntax = "proto3";
+package bigoai;
+
+
+option cc_generic_services = true;
+
+// 从kafka中读取的消息
+message LiveMessage {
+    string uid = 1;           // 用户id
+    string sid = 2;           // 频道id
+    string appid = 3;         // 机审id
+    string report_time = 4;   // 截图时间
+    string country = 5;       // 国家码
+    string url = 6;           // 图片 url
+    uint32 seq_id = 7;        // 截图批次
+    string serial = 8;        // 流水号
+    string extPar = 9;        // 业务透传
+    string attachInfo = 10;   // 业务透传
+    uint64 request_time = 11; // 写入 kafka 的时间 ms, 空的时候需要填入当前时间
+    string type = 12;         // 人审接口业务区分
+    string business = 13;     // 人审接口业务区分
+}
+
+// http://wiki.bigo.sg:8090/pages/viewpage.action?pageId=189138096
+message LiveReviewRequest {
+    message AttachInfo {
+        float discardRate = 1;
+        map<string, string> modelResults = 2;
+        map<string, string> modelVersions = 3;
+        map<string, uint64> modelScores = 4;
+    }
+    message ExtPar {
+        string sid = 1;
+        // int32 userType = 2;
+    }
+    string machineId = 1; // 机审id，同 app_id
+    uint32 reportTime = 2;
+    string uid = 3;
+    string country = 4;
+    string pictureUrl = 5;
+    uint32 reason = 6;
+    uint32 status = 7;
+    string authSign = 8;
+    ExtPar extPar = 9;
+    AttachInfo attachInfo = 10;
+}
+
+message LiveReviewResponse {
+    uint32 code = 1;
+    string msg = 2;
+    string data = 3;
+    uint32 keyType = 4;
+}
+
+
+message LikeMessage {
+  string appid  = 1;
+  string uid    = 2;
+  string seqid  = 3;
+  string postid = 4;
+  string country  = 5;
+  string video_url = 6;
+  string ext_info   = 7;   // 业务透传信息
+  string attach_info = 8; // 请求附加信息
+  message ExtInfo{
+    string country_name = 1;
+    string image1 = 2;
+    int32 post_time = 3;
+  };
+  message AttachInfo {
+    string cutme_id  = 1;
+    string cutme_url = 2;
+    TrainingModelInfo training_model_info = 3;
+    string effect_data = 4;
+  };
+  message TrainingModelInfo {
+    int32 src = 1; // 视频来源，0-默认值，1-前置摄像头录制，2-后置摄像头录制，3-前后置录制，4-相册上传
+    int32 post_duration = 2; // 视频时长, ms
+  }
+  message EffectData {
+    message OtherValue {
+      string d4_bg = 1;
+      string filter = 2;  // -1 if absent.
+      string sticker = 3;  // -1 if absent.
+      string body_magic = 4;  // Empty string if absent.
+      string cutme_id = 5;
+      string photomood_id = 6;
+      string photo_video_id = 7;
+      string makeup_id = 8;
+      string compose_makeup_id = 9;
+      string makeup_cluster_id = 10;
+      string compose_makeup_cluster_id = 11;
+      string duet_video_id = 12;
+    }
+    string magic = 1;
+    string effect = 2;
+    string d3Magic = 3;
+    string other_value = 4;
+  }
+};
+
+message Map {
+  string key = 1;
+  string value = 2;
+};
+
+// Ref: http://wiki.bigo.sg:8090/pages/viewpage.action?pageId=155551396
+message LikeReviewMessage {
+  string uid = 1;
+  string videoId = 2;
+  string resultCode = 3;
+  string dura = 4;
+  string urls = 5; // urlencode
+  string topNRisk = 6;
+  string politicsUrls = 7; // urlencode
+  string source = 8;
+  string appId = 9;
+  string extPar = 10;
+  string videoUrl = 11;
+  int32 coverIllegal = 12;
+  string attachInfo = 13;
+  string traceid = 14;
+
+  message AttachInfo {
+    repeated Map modelScores = 1;
+    repeated Map modelResults = 2;
+    string feature_id1 = 6;
+    string feature_id2 = 7;
+  }
+}
+
+message LikeReviewRequest {
+    string body = 1;
+    int64 timestamp = 2;
+    string sign = 3;
+};
+
+message LikeReviewResponse {
+  int32 code = 1;
+  string msg = 2;
+  string data = 3;
+}

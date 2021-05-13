@@ -1,0 +1,27 @@
+configMapGenerator:
+  - name: like-live-audio-consumer
+    namespace: like
+    files:
+      - likelive-audio.conf
+  - name: dev-like-live-audio-consumer
+    namespace: grey
+    files:
+      - likelive-audio-dev.conf
+  - name: kcc-likee-avatar-dev
+    namespace: grey
+    files:
+      - likee-avatar-dev.conf
+  - name: kcc-likee-avatar
+    namespace: like
+    files:
+      - likee-avatar-prod.conf
+  - name: kcc-likeelive-cover-dev
+    namespace: grey
+    files:
+      - likeelive-cover-dev.conf
+  - name: kcc-likeelive-change-cover-dev
+    namespace: grey
+    files:
+      - likeelive-change-cover-dev.conf
+generatorOptions:
+  disableNameSuffixHash: true

@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tiki-video-consumer
+  namespace: grey
+  annotations:
+    reloader.stakater.com/auto: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tiki-video-consumer
+  template:
+    metadata:
+      labels:
+        app: tiki-video-consumer
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      restartPolicy: Always
+      imagePullSecrets:
+      - name: harbor
+      terminationGracePeriodSeconds: 3
+      containers:
+      - name: consumer
+        resources:
+          limits:
+            cpu: 2 # Required
+            memory: 18Gi # Required
+          requests:
+            cpu: 1
+            memory: 8Gi
+        imagePullPolicy: Always
+        image: __IMAGE__
+        command:
+        - "./kafka-consumer-cpp"
+        - "-usercode_in_pthread=true"
+        - "-connect_timeout_as_unreachable=20"
+        - "-health_check_interval=1"
+        - "-config_file=/app/runtime/tiki-video-grey.conf"
+
+        livenessProbe:
+          httpGet: 
+            path: /
+            port: 8000                                           # Required
+          initialDelaySeconds: 5
+          failureThreshold: 3
+          timeoutSeconds: 3
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8000                                            # Required
+          initialDelaySeconds: 5
+          timeoutSeconds: 3
+          periodSeconds: 10
+        volumeMounts:     #挂载volumes中定义的磁盘
+        - name: data
+          mountPath: /data
+        - name: tmp
+          mountPath: /tmp
+        - name: config
+          mountPath: /app/runtime
+      terminationGracePeriodSeconds: 3
+      volumes:
+      - name: data
+        hostPath:
+          path: /data
+      - name: tmp
+        hostPath:
+          path: /tmp
+      - name: config
+        configMap:
+          name: tiki-video-consumer

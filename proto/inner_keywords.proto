@@ -1,0 +1,93 @@
+syntax = "proto2";
+
+import "keywords_search_v2.proto";
+option cc_generic_services = true;
+package keywords;
+
+message Request {
+    required string uid = 1;       // 用户id
+    required string seqid = 2;     // 请求唯一标识码， 可以不为int类型
+    optional int64 reportTime = 3; // 上报时间，ms时间戳
+    required string content = 4;   // 文本内容
+    required string country = 5;   // 国家码
+    optional string appid = 7;     // 应用ID，接入时指定，参考其他事项1
+    optional int32 businessid = 8; // 应用类别下的业务id，接入时指定，参考其他事项1
+    required ConfigPb config = 9;                             // 敏感词搜索配置
+    optional string ext = 10;                                 // extra info
+    optional bool disable_sensitive = 11 [ default = false ]; // 不使用敏感词
+    optional bool disable_nlp = 12
+        [ default = true ]; // 不使用nlp模型，默认 disable_nlp = true，即不使用 nlp
+                            // 文字模型，若需使用 nlp 文字模型，请提前让开发及算法同学评估
+    optional int32 type = 13; // 数据来源类型，由产品确定，接入时指定，参考其他事项1
+};
+
+
+message Response {
+    optional SensitiveWordResponse sensitive = 1;
+    optional NLPResponse nlp = 2;
+};
+
+message map_string_float {
+    required string key = 1;
+    required float value = 2;
+}
+
+message NLPResponse {
+    message ClassifyResItem {
+        optional uint32 status = 1;   // 标识是否成功进行nlp分析 int(NLPServiceStatus)
+        optional string err_msg = 2;  // 如果有错误发生 填写错误信息
+        required uint32 label = 3;    // 具体分析结果标签 0:不需要过滤  1:需要过滤
+        optional float bert_prob = 4; // 返回的违规label对应的概率
+        repeated map_string_float probability = 5; // 返回各个标签对应的概率值
+    };
+    optional string seqid = 1;          // 和 NLPServiceRequest 中的seqid一样
+    optional string model_version = 2;
+    optional string model_abflag = 3;
+    optional string model_classify_id = 4;
+    repeated ClassifyResItem items = 5;              // 返回的具体内容    
+};
+
+
+message SensitiveWordResponse {
+    required int32 status = 1; // 返回码 标识整个请求是否成功；1:成功；其他数字表示不成功
+    optional string error = 2; // 如果有错误发生 填写错误信息
+    required string uid = 3;   // 和 NLPServiceRequest 中的seqid一样
+    required string seqid = 4;
+    optional bool is_hit = 5; // 0: 未命中敏感词， 1： 命中敏感词
+    repeated SensitiveWordHitRule rule_list = 6;
+    optional string err_desc = 7;
+};
+
+message WordExtraData {
+  optional string weight = 1;
+  optional string remark = 2;
+}
+
+message SensitiveWordHitRule {
+    optional int32 word_type = 1;
+    optional int32 level = 2;
+    optional string rule = 3;
+    optional string text = 4;
+    optional int32 sensitive_type = 5;
+    optional int64 id = 6;
+    optional string countrys = 7;
+    optional int32 start = 8;
+    optional int32 end =
+        9; // [start, end) 命中文本的位置， 左闭右开区间，index 从0开始，以字节（非字符）为单位
+    optional WordExtraData extra_data = 10;
+};
+
+message PunctResponse {
+    optional uint32 status = 1;
+    optional string text = 2;  // 返回带标点符号的文本
+    optional string seqid = 3;  // 与Request中的seqid一样
+    optional string err_msg = 4;  // 如果有错误发生，填写错误信息
+};
+
+
+message PunctRequest {
+    required string uid = 1;       // 用户id
+    required string seqid = 2;     // 请求唯一标识码， 可以不为int类型
+    required string content = 3;   // 文本内容
+    required string country = 4;   // 国家码
+};

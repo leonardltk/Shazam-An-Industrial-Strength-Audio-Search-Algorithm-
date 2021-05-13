@@ -1,0 +1,184 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: helloyo-family-pic-consumer
+  namespace: helloyo
+
+  annotations:
+    reloader.stakater.com/auto: "true"
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: helloyo-family-pic-consumer-dev
+  template:
+    metadata:
+      labels:
+        app: helloyo-family-pic-consumer-dev
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      affinity:
+         nodeAffinity:
+           requiredDuringSchedulingIgnoredDuringExecution:
+             nodeSelectorTerms:
+             - matchExpressions:
+               - key: hello-cv
+                 operator: In
+                 values:
+                 - "true"
+         podAntiAffinity:
+           requiredDuringSchedulingIgnoredDuringExecution:
+           - labelSelector:
+               matchExpressions:
+               - key: service-type
+                 operator: In
+                 values:
+                 - kafka-consumer-cpp
+             topologyKey: kubernetes.io/hostname
+      restartPolicy: Always
+      imagePullSecrets:
+      - name: harbor
+      terminationGracePeriodSeconds: 3
+      containers:
+      - name: consumer
+        resources:
+          limits:
+            cpu: 4
+            memory: 32Gi
+          requests:
+            cpu: 1
+            memory: 4Gi
+        imagePullPolicy: Always
+        image: __IMAGE__
+        command:
+        - "./kafka-consumer-cpp"
+        - "-port=80"
+        - "-connect_timeout_as_unreachable=20"
+        - "-health_check_interval=1"
+        - "-defer_close_second=10"
+        - "-config_file=/app/runtime/helloyo-family-pic.conf"
+
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          failureThreshold: 3
+          timeoutSeconds: 3
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          timeoutSeconds: 3
+          periodSeconds: 10
+        volumeMounts:     #挂载volumes中定义的磁盘
+        - name: localtime
+          mountPath: /etc/localtime
+        - name: corefiles
+          mountPath: /data/corefiles
+        - name: data
+          mountPath: /data
+        - name: tmp
+          mountPath: /tmp
+        - name: config
+          mountPath: /app/runtime
+
+      terminationGracePeriodSeconds: 3
+      volumes:
+      - name: localtime
+        hostPath:
+          path: /etc/localtime
+      - name: corefiles
+        hostPath:
+          path: /data/corefiles
+      - name: data
+        hostPath:
+          path: /data
+      - name: tmp
+        hostPath:
+          path: /tmp
+
+      - name: config
+        configMap:
+          name: helloyo-family-pic-consumer-dev
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: helloyo-family-pic-consumer-dev
+  name: helloyo-family-pic-consumer-dev
+  namespace: helloyo
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+  selector:
+    app: helloyo-family-pic-consumer-dev
+
+---
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: helloyo-family-pic-consumer-dev
+    release: pga
+  name: helloyo-family-pic-consumer-dev
+  namespace: helloyo
+spec:
+  endpoints:
+  - interval: 30s
+    path: /metrics
+    port: http
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_endpoint_node_name]
+      separator: ;
+      regex: (.*)
+      targetLabel: node
+      replacement: $1
+      action: replace
+
+  jobLabel: helloyo-family-pic-consumer-dev
+  namespaceSelector:
+    matchNames:
+    - helloyo
+  selector:
+    matchLabels:
+      app: helloyo-family-pic-consumer-dev
+
+---
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: helloyo-family-pic-consumer-dev
+    release: pga
+  name: helloyo-family-pic-consumer-dev
+  namespace: helloyo
+spec:
+  endpoints:
+  - interval: 30s
+    path: /brpc_metrics
+    port: http
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_endpoint_node_name]
+      separator: ;
+      regex: (.*)
+      targetLabel: node
+      replacement: $1
+      action: replace
+
+  jobLabel: helloyo-family-pic-consumer-dev
+  namespaceSelector:
+    matchNames:
+    - helloyo
+  selector:
+    matchLabels:
+      app: helloyo-family-pic-consumer-dev

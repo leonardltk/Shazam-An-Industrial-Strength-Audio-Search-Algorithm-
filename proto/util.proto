@@ -1,0 +1,83 @@
+syntax = "proto3";
+package bigoai;
+
+import "normalization_message.proto";
+
+option cc_generic_services = true;
+
+message Context {
+    // Normalization protocal.
+    NormaliztionAuditMessage normalization_msg = 1;
+
+    // Audio Audit
+    string raw_audio = 22;
+    string pcm_audio = 23;
+    uint32 pcm_sample_rate = 24;
+   // string wav_audio = 24;
+    string aac_audio = 25;
+    string url_audio = 26;
+    string yitu_download_url = 27;
+
+    // Image Audit
+    repeated bytes raw_images = 30;
+
+    // Video Audit
+    bytes raw_video = 40;
+    bytes raw_cover = 41;
+
+    // Like video meta info
+    DecodeClusterMetaInfo   decode_info = 42;
+    int32                   video_src   = 43;
+    bool                    is_duet     = 44;
+    string                  effect_data = 45;
+    int32                   cutme_id    = 46;
+    string                  cutme_url   = 47;
+    repeated float          embedding   = 48; // video feature embedding.
+    map<string, string>     model_score = 49; // only use by like video.
+
+    string traceid = 1000;
+    bool quit_signal = 1001;
+    uint64 start_time = 1002;
+    map<string, int32> enable_modules = 1003;
+};
+
+message FdfsToken {
+    string bucket = 1;
+    int32 expires = 2;
+    int32 fileExpire = 3;
+    repeated int32 fsizeLimit = 4;
+    repeated string mimeLimit = 5;
+};
+
+message FdfsResp { string url = 1; };
+
+
+message DecodeClusterExtInfo {
+  int64 reqId = 1;
+  int64 reqTime = 2;
+  string msgFrom = 3;
+  string sourceIp = 4;
+  string postid = 5;
+};
+
+
+message DecodeClusterMetaInfo {
+  message ImgInfo {
+    int32 dts = 1;
+    int32 frameind = 2;
+    int32 picNm = 3;
+    int32 pts = 4;
+  };
+  int32 channels = 1;
+  float duration = 2;
+  int32 first_dts = 3;
+  float fps = 4;
+  int32 height = 5;
+  repeated ImgInfo imgInfo = 6;
+  int32 imgNums = 7;
+  float video_kbps = 8;
+  int32 width = 9;
+  float nonSilentAudioPercent = 10;
+  float  avgAudioEnergy = 11;
+  float maxAudioEnergy = 12;
+};

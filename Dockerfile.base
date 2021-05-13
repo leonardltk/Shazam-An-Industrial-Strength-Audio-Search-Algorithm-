@@ -1,0 +1,36 @@
+#harbor.bigo.sg/bigo_ai/infer/kafka-consumer-base:pb3
+FROM ubuntu:16.04
+
+RUN apt-get update && apt-get install -y autoconf automake libtool curl make g++ unzip wget git cmake 
+RUN apt-get install zlib1g-dev -y
+RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v3.13.0/protobuf-cpp-3.13.0.tar.gz && tar -xzvf protobuf-cpp-3.13.0.tar.gz
+RUN cd protobuf-3.13.0 && ./autogen.sh &&  ./configure --with-zlib &&  make -j32 && make install && ldconfig
+
+# prepare env
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        curl \
+        apt-utils \
+        openssl \
+        ca-certificates
+
+# install deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        git \
+        g++ \
+        make \
+        libssl-dev \
+        libgflags-dev \
+        libleveldb-dev \
+        libsnappy-dev \
+        zip \
+        wget 
+
+RUN git clone https://github.com/brpc/brpc.git brpc
+RUN mv /usr/local/lib/* /usr/lib/
+RUN mv /usr/local/include/* /usr/include/
+RUN cd /brpc && sh config_brpc.sh --headers=/usr/include --libs=/usr/lib && \
+    make -j "$(nproc)"
+
+
+# Add ffmpeg dep
+RUN apt-get install libx264-dev -y

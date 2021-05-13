@@ -1,0 +1,109 @@
+syntax = "proto2";
+package config; 
+
+option cc_generic_services = true;
+
+message SubModuleMap {
+    required string          name = 1;
+    required SubModuleConfig conf = 2;
+}
+
+message StrMap {
+    required string key = 1;
+    required string val = 2;
+}
+
+message EffectList {
+    required string effect_name = 1;
+    optional string model_name = 2;
+    repeated int32  ids = 3;
+}
+
+message SubModuleConfig {
+    optional string          instance_name           = 1;
+    required RPCConfig       rpc                     = 2;
+    repeated string          enable_country          = 3;
+    repeated string          enable_model            = 4;
+    repeated ThresholdConfig thresholds              = 5;                   // 对不同国家码的阈值配置
+    repeated StrMap          extra_data              = 6;
+    repeated EffectList      effect_list             = 7;                   // Like 特效过滤参数
+    optional string          response_version        = 8;
+    repeated string          enable_appid            = 9;
+
+    // 特殊的submodule配置，如无必要，勿增配置
+    optional FeatureMatchSubModuleConfig   feature_match = 10;  // used by featurematch/facematch
+    optional AsrSubModuleConfig            asr           = 11;
+    optional ImageOcrSubModuleConfig       image_ocr     = 12;
+    optional BasicSubModuleConfig          basic         = 13;
+    optional ImageOcrSubModuleConfig       video_ocr     = 14;
+    optional LabelControlSubModuleConfig    label_control_conf = 15;
+}
+
+message RPCConfig {
+    required string url        = 1;
+    optional string lb         = 2 [default = "la"];
+    optional uint32 max_retry  = 3 [default = 1];
+    optional uint32 timeout_ms = 4 [default = 5000];
+    optional string protocal   = 5 [default = "http"];
+}
+
+
+message ThresholdConfig {
+    required string model    = 1;
+    repeated string country  = 2;
+    required float threshold = 3;
+}
+
+message FeatureMatchSubModuleConfig {
+    required RPCConfig query_rpc = 1;
+    required string    storename = 2;
+    repeated string    whitelist_uids = 3;
+} 
+
+message KeywordSubModuleConfig {
+    required RPCConfig rpc        = 1;
+    optional string    appid      = 2;
+    optional int32     srcid      = 3;
+    optional int32     businessid = 4;
+    optional int32     text_type  = 5[default=0];
+}
+
+message ImageOcrSubModuleConfig {
+    required RPCConfig rpc         = 1;
+    optional string    appid       = 2;
+    optional int32     businessid  = 4;
+    optional int32     text_type   = 5[default=0];
+    optional string    result_key  = 6;
+    optional bool      check_level = 7[default=false];
+}
+
+message AsrSubModuleConfig {
+    optional KeywordSubModuleConfig keyword      = 1;
+    optional KeywordSubModuleConfig nlp          = 2;
+    optional RPCConfig              punct_rpc    = 3;
+    optional bool                   enable_punct = 4[default=false];
+}
+
+message BasicSubModuleConfig {
+    required int32  class_num = 1;
+    required string model_types = 2;
+    required string appid = 3;
+    required string model_keys = 4;
+    required int32 normal_label_index = 5;
+}
+
+message LabelMappingConfig {
+    repeated int32  mapping_indices = 1;
+    repeated string aggragation_types = 2;
+}
+
+message LabelMappedConfig {
+    required int32  mapped_class_num = 1;
+    required string mapped_model_keys = 2;
+}
+
+message LabelControlSubModuleConfig {
+    required LabelMappingConfig mapping_conf = 1;
+    repeated int32              selected_indices = 2;
+    required LabelMappedConfig  mapped_conf = 3;
+}

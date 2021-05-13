@@ -1,0 +1,91 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: hello-audio-consumer
+  name: hello-audio-consumer
+  namespace: hello
+spec:
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+  selector:
+    app: hello-audio-consumer
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: hello-audio-consumer
+    release: pga
+  name: hello-audio-consumer
+  namespace: hello
+spec:
+  endpoints:
+    - interval: 5s
+      path: /brpc_metrics
+      port: http
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_endpoint_node_name]
+          separator: ;
+          regex: (.*)
+          targetLabel: node
+          replacement: $1
+          action: replace
+
+  jobLabel: hello-audio-consumer
+  namespaceSelector:
+    matchNames:
+      - hello
+  selector:
+    matchLabels:
+      app: hello-audio-consumer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: fanshu-audio-consumer
+  name: fanshu-audio-consumer
+  namespace: fanshu
+spec:
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+  selector:
+    app: fanshu-audio-consumer
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: fanshu-audio-consumer
+    release: pga
+  name: fanshu-audio-consumer
+  namespace: fanshu
+spec:
+  endpoints:
+    - interval: 5s
+      path: /brpc_metrics
+      port: http
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_endpoint_node_name]
+          separator: ;
+          regex: (.*)
+          targetLabel: node
+          replacement: $1
+          action: replace
+
+  jobLabel: fanshu-audio-consumer
+  namespaceSelector:
+    matchNames:
+      - fanshu
+  selector:
+    matchLabels:
+      app: fanshu-audio-consumer
+---
+

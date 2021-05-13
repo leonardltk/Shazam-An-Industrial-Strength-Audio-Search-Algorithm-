@@ -1,0 +1,142 @@
+syntax = "proto2";
+package bigoai;
+
+option cc_generic_services = true;
+
+message AudioCoreResponse {
+    message AudioRes {
+        repeated string model_name = 1;
+        repeated float score = 2;
+        repeated float threshold = 3;
+        optional string version = 4;
+    };
+    required int32 status = 1;
+    optional string msg = 2;
+    repeated AudioRes results = 3;
+};
+
+message AsrResponse {
+    // http status code
+    required int32 status = 1;
+    // if there is no error, empty string
+    required string error_msg = 2;
+    // if there is no error, the recognized text result will be returned, UTF8 encoded.
+    required string text = 3;
+    required string server_info = 4;
+}
+
+message YituRequest {
+    message FileData {
+        optional string audioUrl = 1;
+        optional bool returnAllText = 2;
+        optional string audioId = 3;
+    };
+    message ClientInfo {
+        optional string userId = 1;
+        optional string roomId = 2;
+    };
+    optional string lang = 1;
+    optional string scene = 2;
+    optional string appId = 3;
+    optional string callback = 4;
+    optional bool callbackTransfer = 5;
+    optional FileData fileData = 6;
+    optional ClientInfo clientInfo = 7;
+};
+
+message YituResponse {
+    message YituDetail {
+        optional float score = 1;
+        optional string resultText = 2;
+        optional string label = 3;
+    };
+    message FileResult {
+        optional string result = 1;
+        optional string audioText = 2;
+        optional string audioId = 3;
+        optional string partAudioUrl = 4;
+        optional int64 startTime = 5;
+        optional int64 endTime = 6;
+        repeated YituDetail details = 7;
+    };
+    optional string message = 1;
+    optional int32 rtn = 2;
+    optional string requestId = 3;
+    optional string scene = 4;
+    optional string audioResult = 5;
+    optional string audioAllText = 6;
+    optional string audioLabel = 7;
+    optional int32 pieceTotal = 8;
+    repeated FileResult fileResult = 9;
+};
+
+message YYRequest {
+    required string session_id = 1;
+    required string format = 2;
+    required int32 rate = 3;
+    required int32 channel = 4;
+    required bytes audio_data = 5;
+    optional string audio_url = 6;
+    optional string base_score = 7;
+    required int32 bits_per_sample = 8;
+}
+
+message YYResponse {
+    message YYContent {
+        optional string porn_score = 1;
+        optional string porn_result = 2;
+    }
+    optional int32 code = 1;
+    optional string message = 2;
+    optional YYContent data = 3;
+}
+
+message AudioRequest {
+    enum DataType {
+        // signed 16-bits integer, sample rate 16000 Hz
+        PCM_S16_SR16000 = 0;
+        // PCM_F32_SR16000 = 1; // Assuming amplitude is normalized.
+
+        // *_FILE is namely a file, if you save it to disk (without modification),
+        // it should be readable by corresponding audio player.
+        WAV_FILE = 100;
+
+        // Following file doesn't guarantee to work (decoder not ready)
+        // MP3_FILE = 101;
+    }
+
+    required bytes data = 1;
+    required DataType data_type = 2;
+
+    // following fields are for debugging purpose
+    optional string id = 101;
+    optional string url = 102;
+}
+
+message ShashRequest {
+    enum DataType {
+        // signed 16-bits integer, sample rate 16000 Hz
+        PCM_S16_SR16000 = 0;
+        // PCM_F32_SR16000 = 1; // Assuming amplitude is normalized.
+
+        // *_FILE is namely a file, if you save it to disk (without modification),
+        // it should be readable by corresponding audio player.
+        WAV_FILE = 100;
+
+        // Following file doesn't guarantee to work (decoder not ready)
+        // MP3_FILE = 101;
+    }
+
+    required bytes data = 1;
+    required DataType data_type = 2;
+    required string op = 3;
+    required string uid = 4;
+    required string label = 5;
+
+    // following fields are for debugging purpose
+    optional string id = 101;
+    optional string url = 102;
+
+    // for likee
+    optional string post_id = 203;
+}

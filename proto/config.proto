@@ -1,0 +1,20 @@
+syntax = "proto2";
+package config; 
+
+import "config_module.proto";
+
+option cc_generic_services = true;
+
+// Why Pb2? 
+// pb3 not support default value and required hint.
+// Why not use gflag?
+
+message ModuleMap {
+    required string       name = 1;
+    required ModuleConfig conf = 2;
+}
+
+message GlobalConfig {
+    repeated ModuleMap module_conf = 1; 
+}
+
