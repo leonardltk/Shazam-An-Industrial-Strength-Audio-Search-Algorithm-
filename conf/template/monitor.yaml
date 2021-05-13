@@ -1,0 +1,20 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: offline-embedding
+    release: pga
+  name: offline-embedding
+  namespace: like
+spec:
+  endpoints:
+  - interval: 5s
+    path: /metrics
+    targetPort: 3000
+  jobLabel: offline-embedding
+  namespaceSelector:
+    matchNames:
+    - like
+  selector:
+    matchLabels:
+      app: offline-embedding

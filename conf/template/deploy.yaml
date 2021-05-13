@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: imo-photo-sim-audit                                     #  Required 
+  namespace: grey                                               #  Required
+spec:
+  replicas: 4                                                   #  Required
+  selector:
+    matchLabels:
+      app: imo-photo-sim-audit                                  # Required 
+  template:
+    metadata:
+      labels:
+        app: imo-photo-sim-audit                                # Required
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      affinity:
+         nodeAffinity:
+           requiredDuringSchedulingIgnoredDuringExecution:
+             nodeSelectorTerms:
+             - matchExpressions:
+               - key: app.imo-photo-sim-audit                   # Required
+                 operator: In
+                 values:
+                 - "true"
+         podAntiAffinity:
+             requiredDuringSchedulingIgnoredDuringExecution:
+             - labelSelector:
+                 matchExpressions:
+                 - key: service-type
+                   operator: In
+                   values:
+                   - imo-photo-sim-audit
+               topologyKey: topology.kubernetes.io/zone
+      restartPolicy: Always
+      imagePullSecrets:
+      - name: harbor
+      terminationGracePeriodSeconds: 3
+      containers:
+      - name: imo-photo-sim-audit                                # Required
+        resources:
+          limits:
+            cpu: 7                                             # Required
+            memory: 1Gi                                        # Required 
+        imagePullPolicy: Always
+        image: __IMAGE__
+        ports:
+        - containerPort: 80                                    # Required
+        volumeMounts:     #挂载volumes中定义的磁盘
+        - name: corefiles
+          mountPath: /data/corefiles
+        livenessProbe:
+          httpGet:
+            path: /api/ping
+            port: 80                                           # Required
+          initialDelaySeconds: 120
+          failureThreshold: 5
+          timeoutSeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/ping
+            port: 80                                            # Required
+          initialDelaySeconds: 120 
+          timeoutSeconds: 3
+          periodSeconds: 5
+
+
+      - name: brpc-portal-sidecar
+        imagePullPolicy: Always
+        image: harbor.bigo.sg/bigo_ai/infer/proxy-sidecar-gpu:v418
+        command:
+        - "./proxy"
+        - "-port=8000"
+        #- "-service_name=like-sim-audit"
+        - "-modify_request=true"
+        - "-modify_response=false"
+        - "-forward_lists=127.0.0.1:80"
+        - "-forward_protocols=http"
+        #- "-forward_urls=/api/like-sim-audit"
+        - "-forward_timeout_ms=30000"
+        - "-forward_num=1"
+        - "-max_retry=1"
+        - "-connect_timeout_as_unreachable=10"
+        - "-health_check_interval=1"
+        - "-decode_gpu_num=4"
+        - "-use_auto_limiter=0"
+        - "-use_gpu_decoder=true"
+        volumeMounts:     #挂载volumes中定义的磁盘
+        - name: corefiles
+          mountPath: /data/corefiles
+        - name: tmp
+          mountPath: /tmp
+        ports:
+        - containerPort: 8000
+
+      terminationGracePeriodSeconds: 1
+      volumes:
+      - name: corefiles
+        hostPath:
+          path: /data/corefiles
+      - name: tmp
+        hostPath:
+          path: /tmp

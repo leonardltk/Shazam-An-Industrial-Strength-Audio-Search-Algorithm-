@@ -1,0 +1,8 @@
+redis:
+    host: "103.211.228.6"
+    port: "12600"
+    pwd: "Duowan_123!"
+    # isproducer: True
+    isproducer: False
+    
+    prefix: "likee_audio_audit_shash_v0.1"

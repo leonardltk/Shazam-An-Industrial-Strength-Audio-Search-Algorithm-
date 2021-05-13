@@ -1,0 +1,37 @@
+FROM ubuntu:16.04
+ADD sources.list /etc/apt/
+RUN apt-get update \
+&& apt-get install gcc -y\
+&& apt-get install g++ -y\
+&& apt-get install gdb -y\
+&& apt-get install python-software-properties -y\
+&& apt-get install software-properties-common -y\
+&& add-apt-repository ppa:deadsnakes/ppa -y\
+&& apt-get update\
+&& apt-get install python3.6 -y\
+&& rm /usr/bin/python\
+&& ln -s /usr/bin/python3.6 /usr/bin/python\
+&& rm /usr/bin/python3\
+&& ln -s /usr/bin/python3.6 /usr/bin/python3\
+&& apt-get install python3-pip -y\
+&& pip3 install pip -U\
+&& rm /usr/bin/pip3 \
+&& ln -s -f /usr/local/bin/pip3 /usr/bin/pip3\
+&& ln -s -f /usr/local/bin/pip3 /usr/bin/pip\
+&& pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple\
+&& pip install django
+
+RUN apt-get update && \
+    apt-get install -y libfftw3-dev libgflags-dev libprotobuf-dev libleveldb-dev libssl-dev libx264-dev && \
+    apt-get clean
+
+#yhash-serv part
+RUN mkdir /app
+RUN apt-get update && apt-get install -y vim libboost-system1.58.0 libtbb2
+ENV LD_LIBRARY_PATH=/app
+
+RUN pip install supervisor
+RUN pip install redis
+RUN pip install configargparse
+RUN pip install pyyaml
+RUN pip install requests
