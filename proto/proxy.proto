@@ -1,0 +1,50 @@
+syntax="proto2";
+package bigoai;
+
+option cc_generic_services = true;
+
+message Request {
+  optional string id           = 1;
+  optional string seq_id       = 2;
+  optional string post_id      = 3;
+  optional string url          = 4;
+  repeated bytes images        = 5;
+  repeated bytes audios        = 7;
+  repeated bytes pcms          = 8;
+  optional bytes video         = 9;
+  repeated string models       = 10;
+  repeated bytes wavs          = 11;
+  repeated bytes pcms_f32      = 12;
+  optional bool  debug    = 19;
+};
+
+
+message ModelRes {
+  required string model_name = 1;
+  repeated float  score      = 2;
+};
+
+message Debug {
+  repeated bytes images = 1;
+};
+
+message AudioRes {
+  repeated string model_name = 1;
+  repeated float  score      = 2;
+  repeated float  threshold  = 3;
+  optional string version    = 4;
+};
+
+message Response {
+  required int32 status     = 1;
+  optional string msg       = 2;
+  repeated AudioRes results = 3;
+};
+
+message Req{};
+message Resp{};
+
+service Proxy {
+  rpc proxy(Request) returns (Response);
+  rpc ping(Req) returns (Resp);
+};

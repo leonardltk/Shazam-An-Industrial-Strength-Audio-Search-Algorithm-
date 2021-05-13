@@ -1,0 +1,69 @@
+syntax="proto2";
+package bigoai;
+
+option cc_generic_services = true;
+
+message Vinfo {
+  repeated int32 shape    = 1; // [H, W, C], [N, H, W, C]
+  optional float fps      = 2;
+  optional float kbps     = 3;
+  optional int32 height   = 4;
+  optional int32 width    = 5;
+  optional float duration = 6;
+
+
+  repeated int64 video_pts_usec = 7;
+  repeated int64 video_dts_usec = 8;
+  optional int32 first_dts = 9;
+}
+
+// message SharedMemory {
+//   required int64 addr  = 1;
+//   required int64 size  = 2;
+//   optional int32 shmid = 3;
+//   optional int32 keyid = 4;
+//   repeated int32 shape = 5;
+// }
+
+
+message Request {
+  optional string id   = 1;
+  optional string url = 2;
+  optional string seqID = 3;
+  optional bytes video = 4;
+  // repeated bytes images = 5;
+  repeated bytes audios = 6;
+  repeated string models = 10;
+  optional string post_id = 11;
+  optional bool disableDecode = 12;
+  optional string params = 13; // json str.
+  optional string op = 14;     // sim feabture db. operator[write/read/delete]
+  optional bytes image = 15;
+  optional bool isImage = 16;
+  optional bytes data = 17;
+  optional string label = 18;
+  optional string uid = 19;
+  optional string threshold_match = 20;
+
+  optional Vinfo _vinfo = 7;
+  // optional SharedMemory _shm_video = 8;
+  // optional SharedMemory _shm_audio = 9;
+};
+
+message Response {
+  // required int32 act = 1;
+  // required int32 cluster_id=2;
+  // required string info=3;
+  // required string lang=4;
+  // required float min_dist=5;
+  // required int32 type=6;
+}
+
+message HttpRequest{};
+message HttpResponse{};
+
+service AudioFeature {
+  // rpc process(Request) returns (Response);
+  rpc process(Request) returns (HttpResponse);
+  rpc ping(HttpRequest) returns (HttpResponse);
+};
